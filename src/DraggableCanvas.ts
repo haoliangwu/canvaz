@@ -1,7 +1,9 @@
 import Shape from "./shapes/Shape";
 import { Point } from "./typings";
+import Line from "./shapes/Line";
+import { arrayRemove } from "./utils/index";
 
-export interface DraggableCanvasOptions {}
+export interface DraggableCanvasOptions { }
 
 export default class DraggableCanvas {
   private ctx: CanvasRenderingContext2D
@@ -10,9 +12,26 @@ export default class DraggableCanvas {
   private height = 0
 
   private shapes: Shape[] = []
+  private lines: Line[] = []
 
   private dragStartPoint?: Point
   private dragShape?: Shape
+
+  private _mousePoint: Point = { x: 0, y: 0 }
+
+  private set mousePoint(val: Point) {
+    this._mousePoint = val
+  }
+  private get mousePoint(): Point {
+    return {
+      x: this._mousePoint.x - this.startPoint.x,
+      y: this._mousePoint.y - this.startPoint.y
+    }
+  }
+
+  get context(): CanvasRenderingContext2D {
+    return this.ctx
+  }
 
   constructor(canvas: HTMLCanvasElement, options?: DraggableCanvasOptions) {
     this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -20,7 +39,7 @@ export default class DraggableCanvas {
     this.width = canvas.width
     this.height = canvas.height
 
-    // if (options) {}
+    if (options) { }
   }
 
   private init(canvas: HTMLCanvasElement) {
@@ -31,14 +50,23 @@ export default class DraggableCanvas {
     }
   }
 
-  register(shape: Shape) {
-    this.shapes.push(shape)
+  register(shape: Shape | Line) {
+    if (shape instanceof Shape) {
+      this.shapes.push(shape)
+    }
+
+    if (shape instanceof Line) {
+      this.lines.push(shape)
+    }
   }
 
-  unregister(shape: Shape) {
-    const idx = this.shapes.indexOf(shape)
-    if (idx > -1) {
-      this.shapes.splice(idx, 1)
+  unregister(shape: Shape | Line) {
+    if (shape instanceof Shape) {
+      arrayRemove(this.shapes, shape)
+    }
+
+    if (shape instanceof Line) {
+      arrayRemove(this.lines, shape)
     }
   }
 
@@ -52,12 +80,7 @@ export default class DraggableCanvas {
     this.ctx.clearRect(0, 0, this.width, this.height)
   }
 
-  selectShape(mousePoint: Point): Shape | undefined {
-    const relativePoint: Point = {
-      x: mousePoint.x - this.startPoint.x,
-      y: mousePoint.y - this.startPoint.y
-    }
-
+  selectShape(relativePoint: Point): Shape | undefined {
     for (let i = this.shapes.length - 1; i >= 0; i--) {
       const shape = this.shapes[i]
       if (shape.isSelected(relativePoint)) return shape
@@ -65,21 +88,40 @@ export default class DraggableCanvas {
     }
   }
 
-  startDrag(mousePoint: Point) {
-    const shape = this.selectShape(mousePoint)
+  startConnect(mousePoint: Point): boolean {
+    this.mousePoint = mousePoint
+    const shape = this.selectShape(this.mousePoint)
 
-    if (shape instanceof Shape) {
-      this.dragStartPoint = mousePoint
-      shape.setOffset(mousePoint)
-
-      this.dragShape = shape
+    if (shape && shape.isSelectedBorder(this.mousePoint)) {
+      console.log('select border');
+      return true
     }
+
+    return false
+  }
+
+  startDrag(mousePoint: Point): boolean {
+    this.mousePoint = mousePoint
+    const shape = this.selectShape(this.mousePoint)
+
+    if (shape && shape.isSelectedContent(mousePoint)) {
+      this.dragStartPoint = this.mousePoint
+      this.dragShape = shape
+
+      shape.setOffset(this.mousePoint)
+
+      return true
+    }
+
+    return false
   }
 
   drag(mousePoint: Point) {
+    this.mousePoint = mousePoint
+    
     if (this.dragShape) {
       this.clear()
-      this.dragShape.move(this.ctx, mousePoint)
+      this.dragShape.move(this.ctx, this.mousePoint)
     }
   }
 

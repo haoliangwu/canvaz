@@ -1,5 +1,6 @@
 import Shape, { ShapeBaseOptions } from "./Shape";
 import { Point } from "../typings";
+import { isInRectRange } from "../utils/index";
 
 export interface RectShapeOptions extends ShapeBaseOptions {
   startPoint: Point;
@@ -27,7 +28,7 @@ export default class RectShape extends Shape {
   move(ctx: CanvasRenderingContext2D, mousePoint: Point): void {
     this.startPoint.x = mousePoint.x - this.offsetX
     this.startPoint.y = mousePoint.y - this.offsetY
-    
+
     this.draw(ctx)
   }
 
@@ -37,7 +38,31 @@ export default class RectShape extends Shape {
   }
 
   isSelected(mousePoint: Point): boolean {
-    return this.startPoint.x < mousePoint.x && mousePoint.x < (this.startPoint.x + this.width) && this.startPoint.y < mousePoint.y && mousePoint.y < (this.startPoint.y + this.height)
+    const halfLineWidth = this.lineWidth / 2
+    const startPoint = {
+      x: this.startPoint.x - halfLineWidth,
+      y: this.startPoint.y - halfLineWidth
+    }
+    const width = this.width + this.lineWidth
+    const height = this.height + this.lineWidth
+
+    return isInRectRange(mousePoint, startPoint, width, height)
+  }
+
+  isSelectedContent(mousePoint: Point): boolean {
+    const halfLineWidth = this.lineWidth / 2
+    const startPoint = {
+      x: this.startPoint.x + halfLineWidth,
+      y: this.startPoint.y + halfLineWidth
+    }
+    const width = this.width - this.lineWidth
+    const height = this.height - this.lineWidth
+
+    return isInRectRange(mousePoint, startPoint, width, height)
+  }
+
+  isSelectedBorder(mousePoint: Point): boolean {
+    return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
   }
 
   private drawRectPath(ctx: CanvasRenderingContext2D) {
