@@ -1,7 +1,28 @@
 import { Point } from "../typings";
 
-export function isInRectRange(p: Point, sp: Point, width: number, height: number) {
-  return sp.x <= p.x && p.x <= (sp.x + width) && sp.y <= p.y && p.y <= (sp.y + height)
+export function isInRectRange(mp: Point, sp: Point, width: number, height: number): boolean {
+  return sp.x <= mp.x && mp.x <= (sp.x + width) && sp.y <= mp.y && mp.y <= (sp.y + height)
+}
+
+/*
+            *
+  (mp2)*  *
+        *   h
+      *   *(mp1)
+    * * w * *
+
+    mp1.x * h / w > mp1.y
+    mp2.x * h / w < mp2.y
+*/
+export function isInTriRange(mp: Point, width: number, height: number): boolean {
+  if(mp.y > height) return false
+
+  if(mp.x > width) {
+    mp.x = width * 2 - mp.x
+  }
+
+  const mh = mp.x * height / width
+  return mp.y < mh
 }
 
 export function calcDistanceBetweenPoints(sp: Point, ep: Point) {

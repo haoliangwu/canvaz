@@ -1,4 +1,4 @@
-import { Point, Selectable } from "../typings";
+import { Point, Selectable, Nullable } from "../typings";
 
 export interface ShapeBaseOptions {
   fillStyle?: string;
@@ -27,7 +27,7 @@ export default abstract class Shape implements Selectable {
   abstract isSelected(mousePoint: Point): boolean
   abstract isSelectedContent(mousePoint: Point): boolean
   abstract isSelectedBorder(mousePoint: Point): boolean
-  abstract getSelectedBorder(mousePoint: Point): string
+  abstract getConnectionPoint(mousePoint: Point): Nullable<Point>
 
   private fill(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = this.fillStyle

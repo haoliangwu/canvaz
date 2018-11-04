@@ -93,7 +93,8 @@ export default class DraggableCanvas {
     const shape = this.selectShape(this.mousePoint)
 
     if (shape && shape.isSelectedBorder(this.mousePoint)) {
-      console.log(shape.getSelectedBorder(this.mousePoint));
+      const connectionStartPoint = shape.getConnectionPoint(this.mousePoint)
+      console.log(connectionStartPoint);
       return true
     }
 

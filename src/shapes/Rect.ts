@@ -1,6 +1,6 @@
 import Shape, { ShapeBaseOptions } from "./Shape";
-import { Point } from "../typings";
-import { isInRectRange } from "../utils/index";
+import { Point, Nullable } from "../typings";
+import { isInRectRange, isInTriRange } from "../utils/index";
 
 export interface RectShapeOptions extends ShapeBaseOptions {
   startPoint: Point;
@@ -81,25 +81,116 @@ export default class RectShape extends Shape {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
   }
 
-  getSelectedBorder(mousePoint: Point): string {
-    console.log(this.isSelectTopPanel(mousePoint))
+  getConnectionPoint(mousePoint: Point): Nullable<Point> {
+    const borderDirection = this.getSelectedBorder(mousePoint)
+    let connectionPoint: Nullable<Point> = undefined
+
+    switch (borderDirection) {
+      case 'top':
+        connectionPoint = {
+          x: this.centerPoint.x,
+          y: this.startPoint.y
+        }
+        break
+      case 'right':
+        connectionPoint = {
+          x: this.startPoint.x + this.width,
+          y: this.centerPoint.y
+        }
+        break
+      case 'bottom':
+        connectionPoint = {
+          x: this.centerPoint.x,
+          y: this.startPoint.y + this.height
+        }
+        break
+      case 'left':
+        connectionPoint = {
+          x: this.startPoint.x,
+          y: this.centerPoint.y
+        }
+        break
+    }
+
+    return connectionPoint
+  }
+
+  private getSelectedBorder(mousePoint: Point): string {
+    if (this.isSelectTopTri(mousePoint)) return 'top'
+    if (this.isSelectRightTri(mousePoint)) return 'right'
+    if (this.isSelectBottomTri(mousePoint)) return 'bottom'
+    if (this.isSelectLeftTri(mousePoint)) return 'left'
     return 'none'
   }
 
-  private isSelectTopPanel(mousePoint: Point) {
-    // return isInRectRange(mousePoint)
+  private isSelectTopTri(mousePoint: Point): boolean {
+    const width = this.offsetWidth / 2
+    const height = this.offsetHeight / 2
+    const mp = {
+      x: mousePoint.x - this.offsetStartPoint.x,
+      y: mousePoint.y - this.offsetStartPoint.y
+    }
+
+    return isInTriRange(mp, width, height)
   }
 
-  private isSelectRightPanel(mousePoint: Point) {
+  private isSelectRightTri(mousePoint: Point): boolean {
+    const width = this.offsetHeight / 2
+    const height = this.offsetWidth / 2
+    const mp = {
+      x: mousePoint.y - this.offsetStartPoint.y,
+      y: this.offsetWidth - (mousePoint.x - this.offsetStartPoint.x)
+    }
 
+    return isInTriRange(mp, width, height)
   }
 
-  private isSelectBottomPanel(mousePoint: Point) {
+  private isSelectBottomTri(mousePoint: Point): boolean {
+    const width = this.offsetWidth / 2
+    const height = this.offsetHeight / 2
+    const mp = {
+      x: mousePoint.x - this.offsetStartPoint.x,
+      y: this.offsetHeight - (mousePoint.y - this.offsetStartPoint.y)
+    }
 
+    return isInTriRange(mp, width, height)
   }
 
-  private isSelectLeftPanel(mousePoint: Point) {
+  private isSelectLeftTri(mousePoint: Point): boolean {
+    const width = this.offsetHeight / 2
+    const height = this.offsetWidth / 2
+    const mp = {
+      x: this.offsetHeight - (mousePoint.y - this.offsetStartPoint.y),
+      y: mousePoint.x - this.offsetStartPoint.x
+    }
 
+    return isInTriRange(mp, width, height)
+  }
+
+  private isSelectTopRect(mousePoint: Point): boolean {
+    return isInRectRange(mousePoint, this.offsetStartPoint, this.offsetWidth, this.offsetHeight / 2)
+  }
+
+  private isSelectRightRect(mousePoint: Point): boolean {
+    const startPoint = {
+      x: this.offsetStartPoint.x + this.offsetWidth / 2,
+      y: this.offsetStartPoint.y
+    }
+
+    return isInRectRange(mousePoint, startPoint, this.offsetWidth / 2, this.offsetHeight)
+  }
+
+  private isSelectBottomRect(mousePoint: Point): boolean {
+    const startPoint = {
+      x: this.offsetStartPoint.x,
+      y: this.offsetStartPoint.y + this.offsetHeight / 2
+    }
+
+    return isInRectRange(mousePoint, startPoint, this.offsetWidth, this.offsetHeight / 2)
+  }
+
+  private isSelectLeftRect(mousePoint: Point): boolean {
+    return isInRectRange(mousePoint, this.offsetStartPoint, this.offsetWidth / 2, this.offsetHeight)
   }
 
   private drawRectPath(ctx: CanvasRenderingContext2D) {
