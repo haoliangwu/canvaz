@@ -21,15 +21,15 @@ export default class DraggableCanvas {
 
   private connection?: Line
 
-  private _mousePoint: Point = { x: 0, y: 0 }
+  private mousePoint: Point = { x: 0, y: 0 }
 
-  private set mousePoint(val: Point) {
-    this._mousePoint = val
+  private set clickPoint(val: Point) {
+    this.mousePoint = val
   }
-  private get mousePoint(): Point {
+  private get clickPoint(): Point {
     return {
-      x: this._mousePoint.x - this.startPoint.x,
-      y: this._mousePoint.y - this.startPoint.y
+      x: this.mousePoint.x - this.startPoint.x,
+      y: this.mousePoint.y - this.startPoint.y
     }
   }
 
@@ -97,11 +97,11 @@ export default class DraggableCanvas {
   }
 
   startConnect(mousePoint: Point): boolean {
-    this.mousePoint = mousePoint
-    const shape = this.selectShape(this.mousePoint)
+    this.clickPoint = mousePoint
+    const shape = this.selectShape(this.clickPoint)
 
-    if (shape && shape.isSelectedBorder(this.mousePoint)) {
-      const borderDirection = shape.getSelectedBorder(mousePoint)
+    if (shape && shape.isSelectedBorder(this.clickPoint)) {
+      const borderDirection = shape.getSelectedBorder(this.clickPoint)
       if(!borderDirection) return false
 
       const connectionStartPoint = shape.getConnectionPoint(borderDirection)
@@ -124,9 +124,9 @@ export default class DraggableCanvas {
 
   connect(mousePoint: Point) {
     if (this.connection) {
-      this.mousePoint = mousePoint
+      this.clickPoint = mousePoint
       this.clear()
-      this.connection.stretch(this.mousePoint)
+      this.connection.stretch(this.clickPoint)
       this.draw()
     }
   }
@@ -136,14 +136,14 @@ export default class DraggableCanvas {
   }
 
   startDrag(mousePoint: Point): boolean {
-    this.mousePoint = mousePoint
-    const shape = this.selectShape(this.mousePoint)
+    this.clickPoint = mousePoint
+    const shape = this.selectShape(this.clickPoint)
 
     if (shape && shape.isSelectedContent(mousePoint)) {
-      this.dragStartPoint = { x: this.mousePoint.x, y: this.mousePoint.y}
+      this.dragStartPoint = { x: this.clickPoint.x, y: this.clickPoint.y}
       this.dragShape = shape
 
-      shape.setOffset(this.mousePoint)
+      shape.setOffset(this.clickPoint)
 
       return true
     }
@@ -153,9 +153,9 @@ export default class DraggableCanvas {
 
   drag(mousePoint: Point) {
     if (this.dragShape) {
-      this.mousePoint = mousePoint
+      this.clickPoint = mousePoint
       this.clear()
-      this.dragShape.move(this.mousePoint)
+      this.dragShape.move(this.clickPoint)
       this.draw()
     }
   }

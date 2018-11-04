@@ -15,14 +15,11 @@ export function isInRectRange(mp: Point, sp: Point, width: number, height: numbe
     mp2.x * h / w < mp2.y
 */
 export function isInTriRange(mp: Point, width: number, height: number): boolean {
-  if(mp.y > height) return false
-
   if(mp.x > width) {
     mp.x = width * 2 - mp.x
   }
-
-  const mh = mp.x * height / width
-  return mp.y < mh
+  
+  return mp.y < mp.x * height / width
 }
 
 export function calcDistanceBetweenPoints(sp: Point, ep: Point) {
