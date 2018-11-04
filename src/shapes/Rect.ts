@@ -9,15 +9,47 @@ export interface RectShapeOptions extends ShapeBaseOptions {
 }
 
 export default class RectShape extends Shape {
-  protected startPoint: Point;
   protected width: number;
+  protected offsetWidth: number;
+  protected contentWidth: number;
   protected height: number;
+  protected offsetHeight: number;
+  protected contentHeight: number;
+
+  protected startPoint: Point;
+
+  protected get centerPoint(): Point {
+    return {
+      x: this.startPoint.x + this.width / 2,
+      y: this.startPoint.y + this.height / 2
+    }
+  }
+
+  protected get offsetStartPoint(): Point {
+    return {
+      x: this.startPoint.x - this.halfLineWidth,
+      y: this.startPoint.y - this.halfLineWidth
+    }
+  }
+
+  protected get contentStartPoint(): Point {
+    return {
+      x: this.startPoint.x + this.halfLineWidth,
+      y: this.startPoint.y + this.halfLineWidth
+    }
+  }
 
   constructor(options: RectShapeOptions) {
     super(options)
-    this.startPoint = options.startPoint
     this.width = options.width
+    this.offsetWidth = this.width + this.lineWidth
+    this.contentWidth = this.width - this.lineWidth
+
     this.height = options.height
+    this.offsetHeight = this.height + this.lineWidth
+    this.contentHeight = this.height - this.lineWidth
+
+    this.startPoint = options.startPoint
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
@@ -38,31 +70,36 @@ export default class RectShape extends Shape {
   }
 
   isSelected(mousePoint: Point): boolean {
-    const halfLineWidth = this.lineWidth / 2
-    const startPoint = {
-      x: this.startPoint.x - halfLineWidth,
-      y: this.startPoint.y - halfLineWidth
-    }
-    const width = this.width + this.lineWidth
-    const height = this.height + this.lineWidth
-
-    return isInRectRange(mousePoint, startPoint, width, height)
+    return isInRectRange(mousePoint, this.offsetStartPoint, this.offsetWidth, this.offsetHeight)
   }
 
   isSelectedContent(mousePoint: Point): boolean {
-    const halfLineWidth = this.lineWidth / 2
-    const startPoint = {
-      x: this.startPoint.x + halfLineWidth,
-      y: this.startPoint.y + halfLineWidth
-    }
-    const width = this.width - this.lineWidth
-    const height = this.height - this.lineWidth
-
-    return isInRectRange(mousePoint, startPoint, width, height)
+    return isInRectRange(mousePoint, this.contentStartPoint, this.contentWidth, this.contentHeight)
   }
 
   isSelectedBorder(mousePoint: Point): boolean {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
+  }
+
+  getSelectedBorder(mousePoint: Point): string {
+    console.log(this.isSelectTopPanel(mousePoint))
+    return 'none'
+  }
+
+  private isSelectTopPanel(mousePoint: Point) {
+    // return isInRectRange(mousePoint)
+  }
+
+  private isSelectRightPanel(mousePoint: Point) {
+
+  }
+
+  private isSelectBottomPanel(mousePoint: Point) {
+
+  }
+
+  private isSelectLeftPanel(mousePoint: Point) {
+
   }
 
   private drawRectPath(ctx: CanvasRenderingContext2D) {

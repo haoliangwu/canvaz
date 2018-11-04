@@ -12,11 +12,13 @@ export default abstract class Shape implements Selectable {
   protected fillStyle: string
   protected strokeStyle: string
   protected lineWidth: number
+  protected halfLineWidth: number
 
   constructor(options: ShapeBaseOptions) {
     this.fillStyle = options.fillStyle || ''
     this.strokeStyle = options.strokeStyle || ''
     this.lineWidth = options.lineWidth || 2
+    this.halfLineWidth = this.lineWidth / 2
   }
 
   abstract draw(ctx: CanvasRenderingContext2D): void
@@ -25,6 +27,7 @@ export default abstract class Shape implements Selectable {
   abstract isSelected(mousePoint: Point): boolean
   abstract isSelectedContent(mousePoint: Point): boolean
   abstract isSelectedBorder(mousePoint: Point): boolean
+  abstract getSelectedBorder(mousePoint: Point): string
 
   private fill(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = this.fillStyle

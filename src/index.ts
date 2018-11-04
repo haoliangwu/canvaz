@@ -27,9 +27,7 @@ function onMouseDown(event: MouseEvent) {
   const { clientX, clientY } = event
   const mousePoint = { x: clientX, y: clientY }
 
-  if(draggableCanvas.startConnect(mousePoint)){
-    console.log('start connect')
-  } else {
+  if(!draggableCanvas.startConnect(mousePoint)){
     draggableCanvas.startDrag(mousePoint)
   }
 
@@ -40,6 +38,7 @@ function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event
   const mousePoint = { x: clientX, y: clientY }
 
+  draggableCanvas.connect(mousePoint)
   draggableCanvas.drag(mousePoint)
 }
 

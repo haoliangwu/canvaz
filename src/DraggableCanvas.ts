@@ -93,11 +93,20 @@ export default class DraggableCanvas {
     const shape = this.selectShape(this.mousePoint)
 
     if (shape && shape.isSelectedBorder(this.mousePoint)) {
-      console.log('select border');
+      console.log(shape.getSelectedBorder(this.mousePoint));
       return true
     }
 
     return false
+  }
+
+  connect(mousePoint: Point) {
+    this.mousePoint = mousePoint
+    
+    if (this.dragShape) {
+      this.clear()
+      // invoke line's draw()
+    }
   }
 
   startDrag(mousePoint: Point): boolean {
