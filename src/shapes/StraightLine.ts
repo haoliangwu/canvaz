@@ -4,10 +4,6 @@ import { isInRectRange, calcDistanceBetweenPoints } from "../utils/index";
 import Shape from "./Shape";
 
 export interface LineOptions extends LineBaseOptions {
-  startPoint: Point;
-  endPoint: Point;
-  startShape?: Shape;
-  endShape?: Shape;
 }
 
 export default class StraightLine extends Line {
@@ -20,6 +16,17 @@ export default class StraightLine extends Line {
     this.endPoint = options.endPoint
     this.startShape = options.startShape
     this.endShape = options.endShape
+  }
+
+  update(options: Partial<LineOptions>) {
+    super.update(options)
+
+    console.log(this.startPoint, this.endPoint);
+
+    this.startPoint = options.startPoint || this.startPoint
+    this.endPoint = options.endPoint || this.endPoint
+    this.startShape = options.startShape || this.startShape
+    this.endShape = options.endShape || this.endShape
   }
 
   draw(ctx: CanvasRenderingContext2D): void {

@@ -1,6 +1,8 @@
-import Shape, { ShapeBaseOptions } from "./Shape";
+import Shape, { ShapeBaseOptions, BorderDirection } from "./Shape";
 import { Point, Nullable } from "../typings";
 import { isInRectRange, isInTriRange } from "../utils/index";
+import Line from "./Line";
+import { LineOptions } from "./StraightLine";
 
 export interface RectShapeOptions extends ShapeBaseOptions {
   startPoint: Point;
@@ -39,6 +41,23 @@ export default class RectShape extends Shape {
     }
   }
 
+  get topConnectionPoint(): Point {
+    return { x: this.centerPoint.x, y: this.startPoint.y }
+  }
+
+  get rightConnectionPoint(): Point {
+    return { x: this.startPoint.x + this.width, y: this.centerPoint.y }
+  }
+
+  get bottomConnectionPoint(): Point {
+    return { x: this.centerPoint.x, y: this.startPoint.y + this.height }
+  }
+
+  get leftConnectionPoint(): Point {
+    return { x: this.startPoint.x, y: this.centerPoint.y }
+  }
+
+
   constructor(options: RectShapeOptions) {
     super(options)
     this.width = options.width
@@ -52,7 +71,7 @@ export default class RectShape extends Shape {
     this.startPoint = options.startPoint
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D) {
     this.drawRectPath(ctx)
     this.fillColor(ctx)
   }
@@ -60,6 +79,17 @@ export default class RectShape extends Shape {
   move(mousePoint: Point): void {
     this.startPoint.x = mousePoint.x - this.offsetX
     this.startPoint.y = mousePoint.y - this.offsetY
+
+    if (this.connections.size > 0) {
+      this.connections.forEach((bd: BorderDirection, l: Line) => {
+        const options: Partial<LineOptions> = {}
+
+        if(l.head) options.startPoint = l.head.getConnectionPoint(bd)
+        if(l.tail) options.endPoint = l.tail.getConnectionPoint(bd)
+
+        l.update(options)
+      })
+    }
   }
 
   setOffset(mousePoint: Point): void {
@@ -79,46 +109,20 @@ export default class RectShape extends Shape {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
   }
 
-  getConnectionPoint(mousePoint: Point): Nullable<Point> {
-    const borderDirection = this.getSelectedBorder(mousePoint)
-    let connectionPoint: Nullable<Point> = undefined
-
+  getConnectionPoint(borderDirection: BorderDirection): Nullable<Point> {
     switch (borderDirection) {
-      case 'top':
-        connectionPoint = {
-          x: this.centerPoint.x,
-          y: this.startPoint.y
-        }
-        break
-      case 'right':
-        connectionPoint = {
-          x: this.startPoint.x + this.width,
-          y: this.centerPoint.y
-        }
-        break
-      case 'bottom':
-        connectionPoint = {
-          x: this.centerPoint.x,
-          y: this.startPoint.y + this.height
-        }
-        break
-      case 'left':
-        connectionPoint = {
-          x: this.startPoint.x,
-          y: this.centerPoint.y
-        }
-        break
+      case BorderDirection.TOP: return this.topConnectionPoint
+      case BorderDirection.RIGHT: return this.rightConnectionPoint
+      case BorderDirection.BOTTOM: return this.bottomConnectionPoint
+      case BorderDirection.LEFT: return this.leftConnectionPoint
     }
-
-    return connectionPoint
   }
 
-  private getSelectedBorder(mousePoint: Point): string {
-    if (this.isSelectTopTri(mousePoint)) return 'top'
-    if (this.isSelectRightTri(mousePoint)) return 'right'
-    if (this.isSelectBottomTri(mousePoint)) return 'bottom'
-    if (this.isSelectLeftTri(mousePoint)) return 'left'
-    return 'none'
+  getSelectedBorder(mousePoint: Point): Nullable<BorderDirection> {
+    if (this.isSelectTopTri(mousePoint)) return BorderDirection.TOP
+    if (this.isSelectRightTri(mousePoint)) return BorderDirection.RIGHT
+    if (this.isSelectBottomTri(mousePoint)) return BorderDirection.BOTTOM
+    if (this.isSelectLeftTri(mousePoint)) return BorderDirection.LEFT
   }
 
   private isSelectTopTri(mousePoint: Point): boolean {

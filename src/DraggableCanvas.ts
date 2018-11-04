@@ -9,6 +9,7 @@ export interface DraggableCanvasOptions { }
 export default class DraggableCanvas {
   private ctx: CanvasRenderingContext2D
   private startPoint: Point = { x: 0, y: 0 }
+
   private width = 0
   private height = 0
 
@@ -100,8 +101,10 @@ export default class DraggableCanvas {
     const shape = this.selectShape(this.mousePoint)
 
     if (shape && shape.isSelectedBorder(this.mousePoint)) {
-      const connectionStartPoint = shape.getConnectionPoint(this.mousePoint)
+      const borderDirection = shape.getSelectedBorder(mousePoint)
+      if(!borderDirection) return false
 
+      const connectionStartPoint = shape.getConnectionPoint(borderDirection)
       if (!connectionStartPoint) return false
 
       this.connection = new StraightLine({
@@ -109,6 +112,8 @@ export default class DraggableCanvas {
         endPoint: connectionStartPoint,
         startShape: shape
       })
+
+      shape.registerConnection(this.connection, borderDirection)
       this.lines.push(this.connection)
 
       return true
@@ -135,7 +140,7 @@ export default class DraggableCanvas {
     const shape = this.selectShape(this.mousePoint)
 
     if (shape && shape.isSelectedContent(mousePoint)) {
-      this.dragStartPoint = this.mousePoint
+      this.dragStartPoint = { x: this.mousePoint.x, y: this.mousePoint.y}
       this.dragShape = shape
 
       shape.setOffset(this.mousePoint)
