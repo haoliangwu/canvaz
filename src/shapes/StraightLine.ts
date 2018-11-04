@@ -1,10 +1,13 @@
 import Line, { LineBaseOptions } from "./Line";
 import { Point } from "../typings";
 import { isInRectRange, calcDistanceBetweenPoints } from "../utils/index";
+import Shape from "./Shape";
 
 export interface LineOptions extends LineBaseOptions {
   startPoint: Point;
   endPoint: Point;
+  startShape?: Shape;
+  endShape?: Shape;
 }
 
 export default class StraightLine extends Line {
@@ -15,6 +18,8 @@ export default class StraightLine extends Line {
     super(options)
     this.startPoint = options.startPoint
     this.endPoint = options.endPoint
+    this.startShape = options.startShape
+    this.endShape = options.endShape
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
@@ -22,6 +27,10 @@ export default class StraightLine extends Line {
     ctx.moveTo(this.startPoint.x, this.startPoint.y)
     ctx.lineTo(this.endPoint.x, this.endPoint.y)
     ctx.stroke()
+  }
+
+  stretch(mousePoint: Point): void {
+    this.endPoint = mousePoint
   }
 
   isSelected(mousePoint: Point): boolean {

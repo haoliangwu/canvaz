@@ -5,7 +5,7 @@ import StraightLine from "./shapes/StraightLine";
 const $canvas = document.querySelector('#canvas') as HTMLCanvasElement
 
 const draggableCanvas = new DraggableCanvas($canvas)
-const rect = new RectShape({
+const rect1 = new RectShape({
   fillStyle: 'yellow',
   lineWidth: 8,
   strokeStyle: 'black',
@@ -14,13 +14,23 @@ const rect = new RectShape({
   startPoint: { x: 50, y: 50 }
 })
 
+const rect2 = new RectShape({
+  fillStyle: 'red',
+  lineWidth: 8,
+  strokeStyle: 'black',
+  width: 100,
+  height: 100,
+  startPoint: { x: 250, y: 250 }
+})
+
 // const line = new StraightLine({
 //   strokeStyle: 'black',
 //   startPoint: { x: 200, y: 200},
 //   endPoint: {x: 250, y: 250}
 // })
 
-draggableCanvas.register(rect)
+draggableCanvas.register(rect1)
+draggableCanvas.register(rect2)
 draggableCanvas.draw()
 
 function onMouseDown(event: MouseEvent) {
@@ -43,6 +53,7 @@ function onMouseMove(event: MouseEvent) {
 }
 
 function onMouseUp(event: MouseEvent) {
+  draggableCanvas.endConnect()
   draggableCanvas.endDrag()
   $canvas.removeEventListener('mousemove', onMouseMove)
 }

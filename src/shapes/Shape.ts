@@ -22,7 +22,7 @@ export default abstract class Shape implements Selectable {
   }
 
   abstract draw(ctx: CanvasRenderingContext2D): void
-  abstract move(ctx: CanvasRenderingContext2D, mousePoint: Point): void
+  abstract move(mousePoint: Point): void
   abstract setOffset(mousePoint: Point): void
   abstract isSelected(mousePoint: Point): boolean
   abstract isSelectedContent(mousePoint: Point): boolean

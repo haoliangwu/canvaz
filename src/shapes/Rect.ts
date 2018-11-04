@@ -57,11 +57,9 @@ export default class RectShape extends Shape {
     this.fillColor(ctx)
   }
 
-  move(ctx: CanvasRenderingContext2D, mousePoint: Point): void {
+  move(mousePoint: Point): void {
     this.startPoint.x = mousePoint.x - this.offsetX
     this.startPoint.y = mousePoint.y - this.offsetY
-
-    this.draw(ctx)
   }
 
   setOffset(mousePoint: Point): void {

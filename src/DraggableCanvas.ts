@@ -2,6 +2,7 @@ import Shape from "./shapes/Shape";
 import { Point } from "./typings";
 import Line from "./shapes/Line";
 import { arrayRemove } from "./utils/index";
+import StraightLine from "./shapes/StraightLine";
 
 export interface DraggableCanvasOptions { }
 
@@ -16,6 +17,8 @@ export default class DraggableCanvas {
 
   private dragStartPoint?: Point
   private dragShape?: Shape
+
+  private connection?: Line
 
   private _mousePoint: Point = { x: 0, y: 0 }
 
@@ -74,6 +77,10 @@ export default class DraggableCanvas {
     this.shapes.forEach(shape => {
       shape.draw(this.ctx)
     })
+
+    this.lines.forEach(line => {
+      line.draw(this.ctx)
+    })
   }
 
   clear() {
@@ -94,7 +101,16 @@ export default class DraggableCanvas {
 
     if (shape && shape.isSelectedBorder(this.mousePoint)) {
       const connectionStartPoint = shape.getConnectionPoint(this.mousePoint)
-      console.log(connectionStartPoint);
+
+      if (!connectionStartPoint) return false
+
+      this.connection = new StraightLine({
+        startPoint: connectionStartPoint,
+        endPoint: connectionStartPoint,
+        startShape: shape
+      })
+      this.lines.push(this.connection)
+
       return true
     }
 
@@ -102,12 +118,16 @@ export default class DraggableCanvas {
   }
 
   connect(mousePoint: Point) {
-    this.mousePoint = mousePoint
-    
-    if (this.dragShape) {
+    if (this.connection) {
+      this.mousePoint = mousePoint
       this.clear()
-      // invoke line's draw()
+      this.connection.stretch(this.mousePoint)
+      this.draw()
     }
+  }
+
+  endConnect() {
+    this.connection = undefined
   }
 
   startDrag(mousePoint: Point): boolean {
@@ -127,11 +147,11 @@ export default class DraggableCanvas {
   }
 
   drag(mousePoint: Point) {
-    this.mousePoint = mousePoint
-    
     if (this.dragShape) {
+      this.mousePoint = mousePoint
       this.clear()
-      this.dragShape.move(this.ctx, this.mousePoint)
+      this.dragShape.move(this.mousePoint)
+      this.draw()
     }
   }
 

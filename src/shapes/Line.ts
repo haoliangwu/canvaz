@@ -1,4 +1,5 @@
 import { Point, Selectable } from "../typings";
+import Shape from "./Shape";
 
 export enum LineCapType {
   BUTT = 'butt',
@@ -17,8 +18,11 @@ export default abstract class Line implements Selectable {
   protected lineWidth: number
   protected lineCap: LineCapType = LineCapType.BUTT
 
-  protected startPoint?: Point;
-  protected endPoint?: Point;
+  protected startPoint?: Point
+  protected endPoint?: Point
+
+  protected startShape?: Shape;
+  protected endShape?: Shape;
 
   constructor(options: LineBaseOptions) {
     this.strokeStyle = options.strokeStyle || ''
@@ -27,4 +31,5 @@ export default abstract class Line implements Selectable {
 
   abstract draw(ctx: CanvasRenderingContext2D): void
   abstract isSelected(mousePoint: Point): boolean
+  abstract stretch(mousePoint: Point): void
 }
