@@ -21,8 +21,6 @@ export default class StraightLine extends Line {
   update(options: Partial<LineOptions>) {
     super.update(options)
 
-    console.log(this.startPoint, this.endPoint);
-
     this.startPoint = options.startPoint || this.startPoint
     this.endPoint = options.endPoint || this.endPoint
     this.startShape = options.startShape || this.startShape
