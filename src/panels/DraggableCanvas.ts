@@ -6,12 +6,37 @@ import BaseCanvas, { BaseCanvasOptions } from "@panels/BaseCanvas";
 
 export interface DraggableCanvasOptions extends BaseCanvasOptions { }
 
-export default class DraggableCanvas extends BaseCanvas{
+export default class DraggableCanvas extends BaseCanvas {
   protected dragStartPoint?: Point
   protected dragShape?: Shape
 
   constructor(canvas: HTMLCanvasElement, options?: DraggableCanvasOptions) {
     super(canvas, options)
+  }
+
+  protected onMouseDown(event: MouseEvent): void {
+    const { clientX, clientY } = event
+    const mousePoint = { x: clientX, y: clientY }
+
+    if (!this.startConnect(mousePoint)) {
+      this.startDrag(mousePoint)
+    }
+  }
+
+  protected onMouseMove(event: MouseEvent): void {
+    const { clientX, clientY } = event
+    const mousePoint = { x: clientX, y: clientY }
+
+    this.connect(mousePoint)
+    this.drag(mousePoint)
+  }
+
+  protected onMouseUp(event: MouseEvent): void {
+    const { clientX, clientY } = event
+    const mousePoint = { x: clientX, y: clientY }
+
+    this.endConnect(mousePoint)
+    this.endDrag(mousePoint)
   }
 
   startDrag(mousePoint: Point): boolean {

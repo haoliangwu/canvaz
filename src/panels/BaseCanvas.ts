@@ -11,7 +11,7 @@ export interface BaseCanvasOptions {
   onMouseUp?: (event: MouseEvent) => void
 }
 
-export default class BaseCanvas {
+export default abstract class BaseCanvas {
   protected canvas: HTMLCanvasElement
   protected ctx: CanvasRenderingContext2D
   protected startPoint: Point = { x: 0, y: 0 }
@@ -37,15 +37,19 @@ export default class BaseCanvas {
     }
   }
 
-  protected onMouseDown = noopMouseEventHandler
-  protected onMouseMove = noopMouseEventHandler
-  protected onMouseUp = noopMouseEventHandler
-
   get context(): CanvasRenderingContext2D {
     return this.ctx
   }
 
+  protected abstract onMouseDown(event: MouseEvent): void
+  protected abstract onMouseUp(event: MouseEvent): void
+  protected abstract onMouseMove(event: MouseEvent): void
+
   constructor(canvas: HTMLCanvasElement | string, options?: BaseCanvasOptions) {
+    this.mouseDownHandler = this.mouseDownHandler.bind(this)
+    this.mouseMoveHandler = this.mouseMoveHandler.bind(this)
+    this.mouseUpHandler = this.mouseUpHandler.bind(this)
+
     if (canvas instanceof HTMLCanvasElement) {
       this.canvas = canvas
     } else {
@@ -62,21 +66,9 @@ export default class BaseCanvas {
       y: top + window.pageYOffset,
     }
 
-    this.init(options)
-  }
-
-  init(options?: BaseCanvasOptions) {
     if (options) {
       this.width = options.width || this.canvas.width
       this.height = options.height || this.canvas.height
-
-      this.onMouseDown = options.onMouseDown || this.onMouseDown
-      this.onMouseMove = options.onMouseMove || this.onMouseMove
-      this.onMouseUp = options.onMouseUp || this.onMouseUp
-
-      this.mouseDownHandler = this.mouseDownHandler.bind(this)
-      this.mouseMoveHandler = this.mouseMoveHandler.bind(this)
-      this.mouseUpHandler = this.mouseUpHandler.bind(this)
 
       this.canvas.addEventListener('mousedown', this.mouseDownHandler)
       document.addEventListener('mouseup', this.mouseUpHandler)

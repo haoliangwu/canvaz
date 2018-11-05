@@ -5,26 +5,10 @@ const $canvas = document.querySelector('#canvas') as HTMLCanvasElement
 
 const draggableCanvas = new DraggableCanvas($canvas, {
   onMouseDown(event: MouseEvent) {
-    const { clientX, clientY } = event
-    const mousePoint = { x: clientX, y: clientY }
-
-    if (!draggableCanvas.startConnect(mousePoint)) {
-      draggableCanvas.startDrag(mousePoint)
-    }
   },
   onMouseMove(event: MouseEvent) {
-    const { clientX, clientY } = event
-    const mousePoint = { x: clientX, y: clientY }
-
-    draggableCanvas.connect(mousePoint)
-    draggableCanvas.drag(mousePoint)
   },
   onMouseUp(event: MouseEvent) {
-    const { clientX, clientY } = event
-    const mousePoint = { x: clientX, y: clientY }
-
-    draggableCanvas.endConnect(mousePoint)
-    draggableCanvas.endDrag(mousePoint)
   }
 })
 
