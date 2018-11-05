@@ -1,7 +1,14 @@
-import Shape, { ShapeBaseOptions, BorderDirection } from "./Shape";
+import Shape, { ShapeBaseOptions } from "./Shape";
 import { isInRectRange, isInTriRange } from "../utils/index";
 import Line from "./Line";
 import { LineOptions } from "./StraightLine";
+
+export enum RectBorderDirection {
+  TOP = 'top',
+  RIGHT = 'right',
+  BOTTOM = 'bottom',
+  LEFT = 'left'
+}
 
 export interface RectShapeOptions extends ShapeBaseOptions {
   startPoint: Point;
@@ -80,7 +87,7 @@ export default class RectShape extends Shape {
     this.startPoint.y = mousePoint.y - this.offsetY
 
     if (this.connections.size > 0) {
-      this.connections.forEach((bd: BorderDirection, l: Line) => {
+      this.connections.forEach((bd: string, l: Line) => {
         const options: Partial<LineOptions> = {}
 
         if(l.head == this) options.startPoint = l.head.getConnectionPoint(bd)
@@ -108,20 +115,20 @@ export default class RectShape extends Shape {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
   }
 
-  getConnectionPoint(borderDirection: BorderDirection): Nullable<Point> {
+  getConnectionPoint(borderDirection: RectBorderDirection): Nullable<Point> {
     switch (borderDirection) {
-      case BorderDirection.TOP: return this.topConnectionPoint
-      case BorderDirection.RIGHT: return this.rightConnectionPoint
-      case BorderDirection.BOTTOM: return this.bottomConnectionPoint
-      case BorderDirection.LEFT: return this.leftConnectionPoint
+      case RectBorderDirection.TOP: return this.topConnectionPoint
+      case RectBorderDirection.RIGHT: return this.rightConnectionPoint
+      case RectBorderDirection.BOTTOM: return this.bottomConnectionPoint
+      case RectBorderDirection.LEFT: return this.leftConnectionPoint
     }
   }
 
-  getSelectedBorder(mousePoint: Point): Nullable<BorderDirection> {
-    if (this.isSelectTopTri(mousePoint)) return BorderDirection.TOP
-    if (this.isSelectRightTri(mousePoint)) return BorderDirection.RIGHT
-    if (this.isSelectBottomTri(mousePoint)) return BorderDirection.BOTTOM
-    if (this.isSelectLeftTri(mousePoint)) return BorderDirection.LEFT
+  getSelectedBorder(mousePoint: Point): Nullable<RectBorderDirection> {
+    if (this.isSelectTopTri(mousePoint)) return RectBorderDirection.TOP
+    if (this.isSelectRightTri(mousePoint)) return RectBorderDirection.RIGHT
+    if (this.isSelectBottomTri(mousePoint)) return RectBorderDirection.BOTTOM
+    if (this.isSelectLeftTri(mousePoint)) return RectBorderDirection.LEFT
   }
 
   private isSelectTopTri(mousePoint: Point): boolean {

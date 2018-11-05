@@ -1,12 +1,5 @@
 import Line from "./Line";
 
-export enum BorderDirection {
-  TOP = 'top',
-  RIGHT = 'right',
-  BOTTOM = 'bottom',
-  LEFT = 'left'
-}
-
 export interface ShapeBaseOptions {
   fillStyle?: string;
   strokeStyle?: string;
@@ -18,8 +11,8 @@ export interface Selectable {
 }
 
 export interface Connectable {
-  connections: Map<Line, BorderDirection>
-  registerConnection(line: Line, borderDirection: BorderDirection): Shape
+  connections: Map<Line, string>
+  registerConnection(line: Line, borderDirection: string): Shape
 }
 
 export default abstract class Shape implements Selectable, Connectable {
@@ -30,7 +23,7 @@ export default abstract class Shape implements Selectable, Connectable {
   protected lineWidth: number
   protected halfLineWidth: number
 
-  connections = new Map<Line, BorderDirection>()
+  connections = new Map<Line, string>()
 
   constructor(options: ShapeBaseOptions) {
     this.fillStyle = options.fillStyle || ''
@@ -45,8 +38,8 @@ export default abstract class Shape implements Selectable, Connectable {
   abstract isSelected(mousePoint: Point): boolean
   abstract isSelectedContent(mousePoint: Point): boolean
   abstract isSelectedBorder(mousePoint: Point): boolean
-  abstract getConnectionPoint(borderDirection: BorderDirection): Nullable<Point>
-  abstract getSelectedBorder(mousePoint: Point): Nullable<BorderDirection>
+  abstract getConnectionPoint(borderDirection: string): Nullable<Point>
+  abstract getSelectedBorder(mousePoint: Point): Nullable<string>
 
   private fill(ctx: CanvasRenderingContext2D): Shape {
     ctx.fillStyle = this.fillStyle
@@ -70,7 +63,7 @@ export default abstract class Shape implements Selectable, Connectable {
     return this
   }
 
-  registerConnection(line: Line, borderDirection: BorderDirection): Shape {
+  registerConnection(line: Line, borderDirection: string): Shape {
     if(!this.connections.has(line)) {
       this.connections.set(line, borderDirection)
     }
