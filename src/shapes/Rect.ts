@@ -1,7 +1,7 @@
 import Shape, { ShapeBaseOptions } from "./Shape";
-import { isInRectRange, isInTriRange } from "../utils/index";
-import Line from "./Line";
-import { LineOptions } from "./StraightLine";
+import { isInRectRange, isInTriRange } from "@utils/index";
+import Line from "@lines/Line";
+import { LineOptions } from "@lines/StraightLine";
 
 export enum RectBorderDirection {
   TOP = 'top',

@@ -1,4 +1,4 @@
-import Line from "./Line";
+import Line from "@lines/Line";
 
 export interface ShapeBaseOptions {
   fillStyle?: string;

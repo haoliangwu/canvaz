@@ -1,6 +1,6 @@
 import Line, { LineBaseOptions } from "./Line";
-import { isInRectRange, calcDistanceBetweenPoints } from "../utils/index";
-import Shape from "./Shape";
+import { isInRectRange, calcDistanceBetweenPoints } from "@utils/index";
+import Shape from "@shapes/Shape";
 
 export interface LineOptions extends LineBaseOptions {
 }

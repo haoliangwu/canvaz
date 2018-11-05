@@ -1,7 +1,7 @@
-import Shape from "./shapes/Shape";
-import Line from "./shapes/Line";
-import { arrayRemove, isSameReference } from "./utils/index";
-import StraightLine from "./shapes/StraightLine";
+import Shape from "@shapes/Shape";
+import Line from "@lines/Line";
+import StraightLine from "@lines/StraightLine";
+import { arrayRemove, isSameReference } from "@utils/index";
 
 export interface DraggableCanvasOptions { }
 

@@ -1,6 +1,5 @@
-import DraggableCanvas from "./DraggableCanvas";
-import RectShape from "./shapes/Rect";
-import StraightLine from "./shapes/StraightLine";
+import RectShape from "@shapes/Rect";
+import DraggableCanvas from "@panels/DraggableCanvas";
 
 const $canvas = document.querySelector('#canvas') as HTMLCanvasElement
 
