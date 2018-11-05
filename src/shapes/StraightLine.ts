@@ -1,5 +1,4 @@
 import Line, { LineBaseOptions } from "./Line";
-import { Point } from "../typings";
 import { isInRectRange, calcDistanceBetweenPoints } from "../utils/index";
 import Shape from "./Shape";
 

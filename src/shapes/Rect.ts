@@ -1,5 +1,4 @@
 import Shape, { ShapeBaseOptions, BorderDirection } from "./Shape";
-import { Point, Nullable } from "../typings";
 import { isInRectRange, isInTriRange } from "../utils/index";
 import Line from "./Line";
 import { LineOptions } from "./StraightLine";

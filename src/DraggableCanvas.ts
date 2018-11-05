@@ -1,5 +1,4 @@
 import Shape from "./shapes/Shape";
-import { Point, Nullable } from "./typings";
 import Line from "./shapes/Line";
 import { arrayRemove, isSameReference } from "./utils/index";
 import StraightLine from "./shapes/StraightLine";

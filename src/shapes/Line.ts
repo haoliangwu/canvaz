@@ -1,5 +1,4 @@
-import { Point, Selectable, Nullable } from "../typings";
-import Shape from "./Shape";
+import Shape, { Selectable } from "./Shape";
 
 export enum LineCapType {
   BUTT = 'butt',

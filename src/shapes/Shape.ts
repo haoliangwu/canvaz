@@ -1,4 +1,3 @@
-import { Point, Selectable, Nullable, Connectable } from "../typings";
 import Line from "./Line";
 
 export enum BorderDirection {
@@ -12,6 +11,15 @@ export interface ShapeBaseOptions {
   fillStyle?: string;
   strokeStyle?: string;
   lineWidth?: number;
+}
+
+export interface Selectable {
+  isSelected(mousePoint: Point): boolean
+}
+
+export interface Connectable {
+  connections: Map<Line, BorderDirection>
+  registerConnection(line: Line, borderDirection: BorderDirection): Shape
 }
 
 export default abstract class Shape implements Selectable, Connectable {

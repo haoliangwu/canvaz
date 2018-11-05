@@ -1,5 +1,3 @@
-import { Point } from "../typings";
-
 export function isInRectRange(mp: Point, sp: Point, width: number, height: number): boolean {
   return sp.x <= mp.x && mp.x <= (sp.x + width) && sp.y <= mp.y && mp.y <= (sp.y + height)
 }
