@@ -6,10 +6,10 @@ export function isInRectRange(mp: Point, sp: Point, width: number, height: numbe
 
 /*
             *
-  (mp2)*  *
-        *   h
-      *   *(mp1)
-    * * w * *
+  (mp2) * *   *
+        *   h   *
+      *   *(mp1)  * 
+    * * * * * * * * *
 
     mp1.x * h / w > mp1.y
     mp2.x * h / w < mp2.y
