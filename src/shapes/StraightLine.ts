@@ -29,6 +29,9 @@ export default class StraightLine extends Line {
 
   draw(ctx: CanvasRenderingContext2D): void {
     ctx.beginPath()
+    ctx.lineWidth = this.lineWidth
+    ctx.lineCap = this.lineCap
+    ctx.strokeStyle = this.strokeStyle
     ctx.moveTo(this.startPoint.x, this.startPoint.y)
     ctx.lineTo(this.endPoint.x, this.endPoint.y)
     ctx.stroke()

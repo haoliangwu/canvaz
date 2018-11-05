@@ -45,6 +45,7 @@ export default abstract class Line implements Selectable {
   update(options: Partial<LineBaseOptions>): void {
     this.strokeStyle = options.strokeStyle || this.strokeStyle
     this.lineWidth = options.lineWidth || this.lineWidth
+    this.lineCap = options.lineCap || this.lineCap
   }
   
   abstract draw(ctx: CanvasRenderingContext2D): void

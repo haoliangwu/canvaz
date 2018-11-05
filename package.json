@@ -1,9 +1,9 @@
 {
   "name": "canvaz",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "index.js",
   "scripts": {
-    "dev": "parcel src/index.html"
+    "dev": "parcel serve src/index.html --no-hmr"
   },
   "license": "MIT",
   "devDependencies": {

@@ -79,11 +79,15 @@ export default class DraggableCanvas {
     this.clear()
 
     this.shapes.forEach(shape => {
+      this.ctx.save()
       shape.draw(this.ctx)
+      this.ctx.restore()
     })
 
     this.lines.forEach(line => {
+      this.ctx.save()
       line.draw(this.ctx)
+      this.ctx.restore()
     })
   }
 
@@ -147,7 +151,7 @@ export default class DraggableCanvas {
 
       if (this.connection && borderDirection) {
         const connectionEndPoint = shape.getConnectionPoint(borderDirection)
-        
+
         if (connectionEndPoint) {
           this.connection.update({
             endPoint: connectionEndPoint,
