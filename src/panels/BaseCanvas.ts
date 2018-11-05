@@ -1,11 +1,18 @@
 import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import StraightLine from "@lines/StraightLine";
-import { arrayRemove, isSameReference } from "@utils/index";
+import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
 
-export interface BaseCanvasOptions { }
+export interface BaseCanvasOptions {
+  width?: number,
+  height?: number,
+  onMouseDown?: (event: MouseEvent) => void
+  onMouseMove?: (event: MouseEvent) => void
+  onMouseUp?: (event: MouseEvent) => void
+}
 
 export default class BaseCanvas {
+  protected canvas: HTMLCanvasElement
   protected ctx: CanvasRenderingContext2D
   protected startPoint: Point = { x: 0, y: 0 }
 
@@ -30,17 +37,56 @@ export default class BaseCanvas {
     }
   }
 
+  protected onMouseDown = noopMouseEventHandler
+  protected onMouseMove = noopMouseEventHandler
+  protected onMouseUp = noopMouseEventHandler
+
   get context(): CanvasRenderingContext2D {
     return this.ctx
   }
 
-  constructor(canvas: HTMLCanvasElement, options?: BaseCanvasOptions) {
-    this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    this.init(canvas)
-    this.width = canvas.width
-    this.height = canvas.height
+  constructor(canvas: HTMLCanvasElement | string, options?: BaseCanvasOptions) {
+    if (canvas instanceof HTMLCanvasElement) {
+      this.canvas = canvas
+    } else {
+      this.canvas = document.querySelector(canvas) as HTMLCanvasElement
+    }
 
-    if (options) { }
+    if (!this.canvas) throw new Error('请传入正确的 canvas 元素或者选择器')
+
+    this.ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D
+
+    const { top, left } = this.canvas.getBoundingClientRect()
+    this.startPoint = {
+      x: left + window.pageXOffset,
+      y: top + window.pageYOffset,
+    }
+
+    this.init(options)
+  }
+
+  init(options?: BaseCanvasOptions) {
+    if (options) {
+      this.width = options.width || this.canvas.width
+      this.height = options.height || this.canvas.height
+
+      this.onMouseDown = options.onMouseDown || this.onMouseDown
+      this.onMouseMove = options.onMouseMove || this.onMouseMove
+      this.onMouseUp = options.onMouseUp || this.onMouseUp
+
+      this.mouseDownHandler = this.mouseDownHandler.bind(this)
+      this.mouseMoveHandler = this.mouseMoveHandler.bind(this)
+      this.mouseUpHandler = this.mouseUpHandler.bind(this)
+
+      this.canvas.addEventListener('mousedown', this.mouseDownHandler)
+      document.addEventListener('mouseup', this.mouseUpHandler)
+    }
+  }
+
+  destroy() {
+    this.canvas.removeEventListener('mousedown', this.mouseDownHandler)
+    this.canvas.removeEventListener('mousemove', this.mouseMoveHandler)
+    document.removeEventListener('mouseup', this.mouseUpHandler)
   }
 
   register(shape: Shape | Line) {
@@ -160,23 +206,29 @@ export default class BaseCanvas {
   }
 
   removeConnection(line?: Line) {
-    if(!line) return
-    
+    if (!line) return
+
     this.removeElement(this.lines, line)
   }
 
   removeShape(shape?: Shape) {
-    if(!shape) return
+    if (!shape) return
 
     this.removeElement(this.shapes, shape)
   }
 
-  private init(canvas: HTMLCanvasElement) {
-    const { top, left } = canvas.getBoundingClientRect()
-    this.startPoint = {
-      x: left + window.pageXOffset,
-      y: top + window.pageYOffset,
-    }
+  protected mouseDownHandler(event: MouseEvent) {
+    this.onMouseDown(event)
+    this.canvas.addEventListener('mousemove', this.mouseMoveHandler)
+  }
+
+  protected mouseMoveHandler(event: MouseEvent) {
+    this.onMouseMove(event)
+  }
+
+  protected mouseUpHandler(event: MouseEvent) {
+    this.onMouseUp(event)
+    this.canvas.removeEventListener('mousemove', this.mouseMoveHandler)
   }
 
   protected removeElement<T>(arr: T[], item: T) {
