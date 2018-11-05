@@ -1,0 +1,15 @@
+{
+  "plugins": [
+    [
+      "module-resolver",
+      {
+        "alias": {
+          "@lines": "./src/lines",
+          "@shapes": "./src/shapes",
+          "@panels": "./src/panels",
+          "@utils": "./src/utils"
+        }
+      }
+    ]
+  ]
+}
