@@ -1,5 +1,5 @@
 import Shape from "./shapes/Shape";
-import { Point } from "./typings";
+import { Point, Nullable } from "./typings";
 import Line from "./shapes/Line";
 import { arrayRemove, isSameReference } from "./utils/index";
 import StraightLine from "./shapes/StraightLine";
@@ -45,14 +45,6 @@ export default class DraggableCanvas {
     this.height = canvas.height
 
     if (options) { }
-  }
-
-  private init(canvas: HTMLCanvasElement) {
-    const { top, left } = canvas.getBoundingClientRect()
-    this.startPoint = {
-      x: left + window.pageXOffset,
-      y: top + window.pageYOffset,
-    }
   }
 
   register(shape: Shape | Line) {
@@ -164,7 +156,7 @@ export default class DraggableCanvas {
       }
     } else {
       // todo revert current connection line
-      if (this.connection) console.log('need revert current connection line');
+      this.removeConnection(this.connection)
     }
 
     this.connection = undefined
@@ -198,5 +190,35 @@ export default class DraggableCanvas {
   endDrag(mousePoint: Point) {
     this.dragStartPoint = undefined
     this.dragShape = undefined
+  }
+
+  removeConnection(line?: Line) {
+    if(!line) return
+    
+    this.removeElement(this.lines, line)
+  }
+
+  removeShape(shape?: Shape) {
+    if(!shape) return
+
+    this.removeElement(this.shapes, shape)
+  }
+
+  private init(canvas: HTMLCanvasElement) {
+    const { top, left } = canvas.getBoundingClientRect()
+    this.startPoint = {
+      x: left + window.pageXOffset,
+      y: top + window.pageYOffset,
+    }
+  }
+
+  private removeElement<T>(arr: T[], item: T) {
+    const idx = arr.indexOf(item)
+
+    if (idx > -1) {
+      arr.splice(idx, 1)
+    }
+
+    this.draw()
   }
 }
