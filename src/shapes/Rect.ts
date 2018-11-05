@@ -84,8 +84,8 @@ export default class RectShape extends Shape {
       this.connections.forEach((bd: BorderDirection, l: Line) => {
         const options: Partial<LineOptions> = {}
 
-        if(l.head) options.startPoint = l.head.getConnectionPoint(bd)
-        if(l.tail) options.endPoint = l.tail.getConnectionPoint(bd)
+        if(l.head == this) options.startPoint = l.head.getConnectionPoint(bd)
+        if(l.tail == this) options.endPoint = l.tail.getConnectionPoint(bd)
 
         l.update(options)
       })

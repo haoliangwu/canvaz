@@ -20,7 +20,7 @@ export interface LineBaseOptions {
 export default abstract class Line implements Selectable {
   protected strokeStyle: string
   protected lineWidth: number
-  protected lineCap: LineCapType = LineCapType.BUTT
+  protected lineCap: LineCapType
 
   protected startPoint?: Point
   protected endPoint?: Point
@@ -39,6 +39,7 @@ export default abstract class Line implements Selectable {
   constructor(options: LineBaseOptions) {
     this.strokeStyle = options.strokeStyle || ''
     this.lineWidth = options.lineWidth || 6
+    this.lineCap = options.lineCap || LineCapType.ROUND
   }
 
   update(options: Partial<LineBaseOptions>): void {

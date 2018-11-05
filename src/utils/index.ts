@@ -15,10 +15,10 @@ export function isInRectRange(mp: Point, sp: Point, width: number, height: numbe
     mp2.x * h / w < mp2.y
 */
 export function isInTriRange(mp: Point, width: number, height: number): boolean {
-  if(mp.x > width) {
+  if (mp.x > width) {
     mp.x = width * 2 - mp.x
   }
-  
+
   return mp.y < mp.x * height / width
 }
 
@@ -36,4 +36,8 @@ export function arrayRemove<T>(arr: T[], item: T): T[] {
   }
 
   return arr
+}
+
+export function isSameReference(ob1: any, ob2: any) {
+  return ob1 == ob2
 }

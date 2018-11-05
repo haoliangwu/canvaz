@@ -53,8 +53,11 @@ function onMouseMove(event: MouseEvent) {
 }
 
 function onMouseUp(event: MouseEvent) {
-  draggableCanvas.endConnect()
-  draggableCanvas.endDrag()
+  const { clientX, clientY } = event
+  const mousePoint = { x: clientX, y: clientY }
+
+  draggableCanvas.endConnect(mousePoint)
+  draggableCanvas.endDrag(mousePoint)
   $canvas.removeEventListener('mousemove', onMouseMove)
 }
 

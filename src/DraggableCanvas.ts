@@ -1,7 +1,7 @@
 import Shape from "./shapes/Shape";
 import { Point } from "./typings";
 import Line from "./shapes/Line";
-import { arrayRemove } from "./utils/index";
+import { arrayRemove, isSameReference } from "./utils/index";
 import StraightLine from "./shapes/StraightLine";
 
 export interface DraggableCanvasOptions { }
@@ -19,14 +19,15 @@ export default class DraggableCanvas {
   private dragStartPoint?: Point
   private dragShape?: Shape
 
+  private connectionStartShape?: Shape
   private connection?: Line
 
   private mousePoint: Point = { x: 0, y: 0 }
 
-  private set clickPoint(val: Point) {
+  private set relativeMousePoint(val: Point) {
     this.mousePoint = val
   }
-  private get clickPoint(): Point {
+  private get relativeMousePoint(): Point {
     return {
       x: this.mousePoint.x - this.startPoint.x,
       y: this.mousePoint.y - this.startPoint.y
@@ -75,6 +76,8 @@ export default class DraggableCanvas {
   }
 
   draw() {
+    this.clear()
+
     this.shapes.forEach(shape => {
       shape.draw(this.ctx)
     })
@@ -97,12 +100,14 @@ export default class DraggableCanvas {
   }
 
   startConnect(mousePoint: Point): boolean {
-    this.clickPoint = mousePoint
-    const shape = this.selectShape(this.clickPoint)
+    this.relativeMousePoint = mousePoint
+    const shape = this.selectShape(this.relativeMousePoint)
 
-    if (shape && shape.isSelectedBorder(this.clickPoint)) {
-      const borderDirection = shape.getSelectedBorder(this.clickPoint)
-      if(!borderDirection) return false
+    if (shape && shape.isSelectedBorder(this.relativeMousePoint)) {
+      this.connectionStartShape = shape
+
+      const borderDirection = shape.getSelectedBorder(this.relativeMousePoint)
+      if (!borderDirection) return false
 
       const connectionStartPoint = shape.getConnectionPoint(borderDirection)
       if (!connectionStartPoint) return false
@@ -124,26 +129,53 @@ export default class DraggableCanvas {
 
   connect(mousePoint: Point) {
     if (this.connection) {
-      this.clickPoint = mousePoint
-      this.clear()
-      this.connection.stretch(this.clickPoint)
+      this.relativeMousePoint = mousePoint
+      this.connection.stretch(this.relativeMousePoint)
       this.draw()
     }
   }
 
-  endConnect() {
+  endConnect(mousePoint: Point) {
+    this.relativeMousePoint = mousePoint
+    const shape = this.selectShape(this.relativeMousePoint)
+
+    // 当前鼠标指向某个图形
+    // 且悬浮于图形的 border 上
+    // 且连线的终点图形不为始点图形
+    if (shape && shape.isSelectedBorder(this.relativeMousePoint) && !isSameReference(this.connectionStartShape, shape)) {
+      const borderDirection = shape.getSelectedBorder(this.relativeMousePoint)
+
+      if (this.connection && borderDirection) {
+        const connectionEndPoint = shape.getConnectionPoint(borderDirection)
+        
+        if (connectionEndPoint) {
+          this.connection.update({
+            endPoint: connectionEndPoint,
+            endShape: shape
+          })
+
+          shape.registerConnection(this.connection, borderDirection)
+          this.draw()
+        }
+      }
+    } else {
+      // todo revert current connection line
+      if (this.connection) console.log('need revert current connection line');
+    }
+
     this.connection = undefined
+    this.connectionStartShape = undefined
   }
 
   startDrag(mousePoint: Point): boolean {
-    this.clickPoint = mousePoint
-    const shape = this.selectShape(this.clickPoint)
+    this.relativeMousePoint = mousePoint
+    const shape = this.selectShape(this.relativeMousePoint)
 
     if (shape && shape.isSelectedContent(mousePoint)) {
-      this.dragStartPoint = { x: this.clickPoint.x, y: this.clickPoint.y}
+      this.dragStartPoint = { x: this.relativeMousePoint.x, y: this.relativeMousePoint.y }
       this.dragShape = shape
 
-      shape.setOffset(this.clickPoint)
+      shape.setOffset(this.relativeMousePoint)
 
       return true
     }
@@ -153,14 +185,13 @@ export default class DraggableCanvas {
 
   drag(mousePoint: Point) {
     if (this.dragShape) {
-      this.clickPoint = mousePoint
-      this.clear()
-      this.dragShape.move(this.clickPoint)
+      this.relativeMousePoint = mousePoint
+      this.dragShape.move(this.relativeMousePoint)
       this.draw()
     }
   }
 
-  endDrag() {
+  endDrag(mousePoint: Point) {
     this.dragStartPoint = undefined
     this.dragShape = undefined
   }
