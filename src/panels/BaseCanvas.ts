@@ -41,6 +41,10 @@ export default abstract class BaseCanvas {
     return this.ctx
   }
 
+  private onMouseDownCustom: (event: MouseEvent) => void = noopMouseEventHandler
+  private onMouseMoveCustom: (event: MouseEvent) => void = noopMouseEventHandler
+  private onMouseUpCustom: (event: MouseEvent) => void = noopMouseEventHandler
+
   protected abstract onMouseDown(event: MouseEvent): void
   protected abstract onMouseUp(event: MouseEvent): void
   protected abstract onMouseMove(event: MouseEvent): void
@@ -59,6 +63,8 @@ export default abstract class BaseCanvas {
     if (!this.canvas) throw new Error('请传入正确的 canvas 元素或者选择器')
 
     this.ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D
+    this.width = this.canvas.width
+    this.height = this.canvas.height
 
     const { top, left } = this.canvas.getBoundingClientRect()
     this.startPoint = {
@@ -66,13 +72,19 @@ export default abstract class BaseCanvas {
       y: top + window.pageYOffset,
     }
 
-    if (options) {
-      this.width = options.width || this.canvas.width
-      this.height = options.height || this.canvas.height
+    this.canvas.addEventListener('mousedown', this.mouseDownHandler)
+    document.addEventListener('mouseup', this.mouseUpHandler)
 
-      this.canvas.addEventListener('mousedown', this.mouseDownHandler)
-      document.addEventListener('mouseup', this.mouseUpHandler)
-    }
+    if (options) this.init(options)
+  }
+
+  init(options: BaseCanvasOptions) {
+    this.width = options.width || this.canvas.width
+    this.height = options.height || this.canvas.height
+
+    if (options.onMouseDown) this.onMouseDownCustom = options.onMouseDown.bind(this)
+    if (options.onMouseMove) this.onMouseMoveCustom = options.onMouseMove.bind(this)
+    if (options.onMouseUp) this.onMouseUpCustom = options.onMouseUp.bind(this)
   }
 
   destroy() {
@@ -189,7 +201,6 @@ export default abstract class BaseCanvas {
         }
       }
     } else {
-      // todo revert current connection line
       this.removeConnection(this.connection)
     }
 
@@ -212,15 +223,20 @@ export default abstract class BaseCanvas {
   protected mouseDownHandler(event: MouseEvent) {
     this.onMouseDown(event)
     this.canvas.addEventListener('mousemove', this.mouseMoveHandler)
+
+    this.onMouseDownCustom(event)
   }
 
   protected mouseMoveHandler(event: MouseEvent) {
     this.onMouseMove(event)
+    this.onMouseMoveCustom(event)
   }
 
   protected mouseUpHandler(event: MouseEvent) {
     this.onMouseUp(event)
     this.canvas.removeEventListener('mousemove', this.mouseMoveHandler)
+
+    this.onMouseUpCustom(event)
   }
 
   protected removeElement<T>(arr: T[], item: T) {

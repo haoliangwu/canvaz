@@ -3,14 +3,7 @@ import DraggableCanvas from "@panels/DraggableCanvas";
 
 const $canvas = document.querySelector('#canvas') as HTMLCanvasElement
 
-const draggableCanvas = new DraggableCanvas($canvas, {
-  onMouseDown(event: MouseEvent) {
-  },
-  onMouseMove(event: MouseEvent) {
-  },
-  onMouseUp(event: MouseEvent) {
-  }
-})
+const draggableCanvas = new DraggableCanvas($canvas)
 
 const rect1 = new RectShape({
   fillStyle: 'yellow',
