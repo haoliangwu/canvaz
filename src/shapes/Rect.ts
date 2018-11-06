@@ -87,11 +87,13 @@ export default class RectShape extends Shape {
     this.startPoint.y = mousePoint.y - this.offsetY
 
     if (this.connections.size > 0) {
-      this.connections.forEach((bd: string, l: Line) => {
+      this.connections.forEach((cp: ConnectionPoint, l: Line) => {
         const options: Partial<LineOptions> = {}
 
-        if(l.head == this) options.startPoint = l.head.getConnectionPoint(bd)
-        if(l.tail == this) options.endPoint = l.tail.getConnectionPoint(bd)
+        cp = this.syncConnectionPoint(cp)
+
+        if(l.head == this) options.startPoint = cp
+        if(l.tail == this) options.endPoint = cp
 
         l.update(options)
       })
@@ -115,12 +117,16 @@ export default class RectShape extends Shape {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
   }
 
-  getConnectionPoint(borderDirection: RectBorderDirection): Nullable<Point> {
+  calcConnectionPoint(borderDirection: string): Nullable<ConnectionPoint> {
     switch (borderDirection) {
-      case RectBorderDirection.TOP: return this.topConnectionPoint
-      case RectBorderDirection.RIGHT: return this.rightConnectionPoint
-      case RectBorderDirection.BOTTOM: return this.bottomConnectionPoint
-      case RectBorderDirection.LEFT: return this.leftConnectionPoint
+      case RectBorderDirection.TOP:
+        return this.connectionPointFactory(this.topConnectionPoint)
+      case RectBorderDirection.RIGHT:
+        return this.connectionPointFactory(this.rightConnectionPoint)
+      case RectBorderDirection.BOTTOM:
+        return this.connectionPointFactory(this.bottomConnectionPoint)
+      case RectBorderDirection.LEFT:
+        return this.connectionPointFactory(this.leftConnectionPoint)
     }
   }
 
@@ -129,6 +135,15 @@ export default class RectShape extends Shape {
     if (this.isSelectRightTri(mousePoint)) return RectBorderDirection.RIGHT
     if (this.isSelectBottomTri(mousePoint)) return RectBorderDirection.BOTTOM
     if (this.isSelectLeftTri(mousePoint)) return RectBorderDirection.LEFT
+  }
+
+  private connectionPointFactory(connectionPoint: Point): ConnectionPoint {
+    return {
+      origin: this.startPoint,
+      offsetX: connectionPoint.x - this.startPoint.x,
+      offsetY: connectionPoint.y - this.startPoint.y,
+      ...connectionPoint,
+    }
   }
 
   private isSelectTopTri(mousePoint: Point): boolean {

@@ -5,4 +5,8 @@ declare interface Point {
   y: number;
 }
 
-
+declare interface ConnectionPoint extends Point{
+  origin: Point;
+  offsetX: number;
+  offsetY: number;
+}

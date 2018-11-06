@@ -1,7 +1,7 @@
 import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
-import StraightLine from "@lines/StraightLine";
 import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
+import StraightConnectionLine from "@lines/StraightConnectionLine";
 
 export interface BaseCanvasOptions {
   width?: number,
@@ -151,16 +151,16 @@ export default abstract class BaseCanvas {
       const borderDirection = shape.getSelectedBorder(this.relativeMousePoint)
       if (!borderDirection) return false
 
-      const connectionStartPoint = shape.getConnectionPoint(borderDirection)
+      const connectionStartPoint = shape.calcConnectionPoint(borderDirection)
       if (!connectionStartPoint) return false
 
-      this.connection = new StraightLine({
+      this.connection = new StraightConnectionLine({
         startPoint: connectionStartPoint,
         endPoint: connectionStartPoint,
         startShape: shape
       })
 
-      shape.registerConnection(this.connection, borderDirection)
+      shape.registerConnectionPoint(this.connection, connectionStartPoint)
       this.lines.push(this.connection)
 
       return true
@@ -188,7 +188,7 @@ export default abstract class BaseCanvas {
       const borderDirection = shape.getSelectedBorder(this.relativeMousePoint)
 
       if (this.connection && borderDirection) {
-        const connectionEndPoint = shape.getConnectionPoint(borderDirection)
+        const connectionEndPoint = shape.calcConnectionPoint(borderDirection)
 
         if (connectionEndPoint) {
           this.connection.update({
@@ -196,7 +196,7 @@ export default abstract class BaseCanvas {
             endShape: shape
           })
 
-          shape.registerConnection(this.connection, borderDirection)
+          shape.registerConnectionPoint(this.connection, connectionEndPoint)
           this.draw()
         }
       }

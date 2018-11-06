@@ -11,8 +11,10 @@ export interface Selectable {
 }
 
 export interface Connectable {
-  connections: Map<Line, string>
-  registerConnection(line: Line, borderDirection: string): Shape
+  connections: Map<Line, ConnectionPoint>
+  registerConnectionPoint(line: Line, connectionPoint: ConnectionPoint): Shape
+  unregisterConnectionPoint(line: Line): Shape
+  getConnectionPoint(line: Line): Nullable<ConnectionPoint>
 }
 
 export default abstract class Shape implements Selectable, Connectable {
@@ -23,7 +25,7 @@ export default abstract class Shape implements Selectable, Connectable {
   protected lineWidth: number
   protected halfLineWidth: number
 
-  connections = new Map<Line, string>()
+  connections = new Map<Line, ConnectionPoint>()
 
   constructor(options: ShapeBaseOptions) {
     this.fillStyle = options.fillStyle || ''
@@ -38,7 +40,7 @@ export default abstract class Shape implements Selectable, Connectable {
   abstract isSelected(mousePoint: Point): boolean
   abstract isSelectedContent(mousePoint: Point): boolean
   abstract isSelectedBorder(mousePoint: Point): boolean
-  abstract getConnectionPoint(borderDirection: string): Nullable<Point>
+  abstract calcConnectionPoint(borderDirection?: string): Nullable<ConnectionPoint>
   abstract getSelectedBorder(mousePoint: Point): Nullable<string>
 
   private fill(ctx: CanvasRenderingContext2D): Shape {
@@ -63,10 +65,31 @@ export default abstract class Shape implements Selectable, Connectable {
     return this
   }
 
-  registerConnection(line: Line, borderDirection: string): Shape {
+  registerConnectionPoint(line: Line, connectionPoint: ConnectionPoint): Shape {
     if(!this.connections.has(line)) {
-      this.connections.set(line, borderDirection)
+      this.connections.set(line, connectionPoint)
     }
     return this
   }
+
+  unregisterConnectionPoint(line: Line): Shape {
+    if(this.connections.has(line)) {
+      this.connections.delete(line)
+    }
+
+    return this
+  }
+
+  getConnectionPoint(line: Line): Nullable<ConnectionPoint> {
+    if(this.connections.has(line)) {
+      return this.connections.get(line)
+    }
+  }
+
+  syncConnectionPoint(connectionPoint: ConnectionPoint): ConnectionPoint {
+    connectionPoint.x = connectionPoint.origin.x + connectionPoint.offsetX
+    connectionPoint.y = connectionPoint.origin.y + connectionPoint.offsetY
+
+    return connectionPoint
+  } 
 }
