@@ -6,18 +6,7 @@ export interface ShapeBaseOptions {
   lineWidth?: number;
 }
 
-export interface Selectable {
-  isSelected(mousePoint: Point): boolean
-}
-
-export interface Connectable {
-  connections: Map<Line, ConnectionPoint>
-  registerConnectionPoint(line: Line, connectionPoint: ConnectionPoint): Shape
-  unregisterConnectionPoint(line: Line): Shape
-  getConnectionPoint(line: Line): Nullable<ConnectionPoint>
-}
-
-export default abstract class Shape implements Selectable, Connectable {
+export default abstract class Shape implements Selectable, Connectable<Line, Shape> {
   protected offsetX: number = 0
   protected offsetY: number = 0
   protected fillStyle: string

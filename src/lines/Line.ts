@@ -1,4 +1,4 @@
-import Shape, { Selectable } from "@shapes/Shape";
+import Shape from "@shapes/Shape";
 
 export enum LineCapType {
   BUTT = 'butt',
