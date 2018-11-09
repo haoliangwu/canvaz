@@ -2591,6 +2591,12 @@ rsvp@^3.3.3:
   version "3.6.2"
   resolved "http://registry.npm.taobao.org/rsvp/download/rsvp-3.6.2.tgz#2e96491599a96cde1b515d5674a8f7a91452926a"
 
+rxjs@^6.3.3:
+  version "6.3.3"
+  resolved "http://registry.npm.taobao.org/rxjs/download/rxjs-6.3.3.tgz#3c6a7fa420e844a81390fb1158a9ec614f4bad55"
+  dependencies:
+    tslib "^1.9.0"
+
 safe-buffer@^5.0.1, safe-buffer@^5.1.2, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.2"
   resolved "http://registry.npm.taobao.org/safe-buffer/download/safe-buffer-5.1.2.tgz#991ec69d296e0313747d59bdfd2b745c35f8828d"
@@ -2963,7 +2969,7 @@ ts-jest@^23.10.4:
     semver "^5.5"
     yargs-parser "10.x"
 
-tslib@^1.8.0, tslib@^1.8.1:
+tslib@^1.8.0, tslib@^1.8.1, tslib@^1.9.0:
   version "1.9.3"
   resolved "http://registry.npm.taobao.org/tslib/download/tslib-1.9.3.tgz#d7e4dd79245d85428c4d7e4822a79917954ca286"
 

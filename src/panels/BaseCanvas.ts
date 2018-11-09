@@ -2,6 +2,8 @@ import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
+import { Observable, fromEvent, Subscription } from 'rxjs';
+import { switchMap, takeUntil, tap } from 'rxjs/operators';
 
 export interface BaseCanvasOptions {
   width?: number,
@@ -27,6 +29,12 @@ export default abstract class BaseCanvas {
 
   protected mousePoint: Point = { x: 0, y: 0 }
 
+  protected mousedown$: Observable<MouseEvent>
+  protected mousemove$: Observable<MouseEvent>
+  protected mouseup$: Observable<MouseEvent>
+
+  private subscription?: Subscription
+
   protected set relativeMousePoint(val: Point) {
     this.mousePoint = val
   }
@@ -50,10 +58,6 @@ export default abstract class BaseCanvas {
   protected abstract onMouseMove(event: MouseEvent): void
 
   constructor(canvas: HTMLCanvasElement | string, options?: BaseCanvasOptions) {
-    this.mouseDownHandler = this.mouseDownHandler.bind(this)
-    this.mouseMoveHandler = this.mouseMoveHandler.bind(this)
-    this.mouseUpHandler = this.mouseUpHandler.bind(this)
-
     if (canvas instanceof HTMLCanvasElement) {
       this.canvas = canvas
     } else {
@@ -72,8 +76,19 @@ export default abstract class BaseCanvas {
       y: top + window.pageYOffset,
     }
 
-    this.canvas.addEventListener('mousedown', this.mouseDownHandler)
-    document.addEventListener('mouseup', this.mouseUpHandler)
+    this.mousedown$ = fromEvent<MouseEvent>(this.canvas, 'mousedown')
+    this.mousemove$ = fromEvent<MouseEvent>(this.canvas, 'mousemove')
+    this.mouseup$ = fromEvent<MouseEvent>(document, 'mouseup')
+
+    this.subscription = this.mousedown$.pipe(
+      tap(e=> this.mouseDownHandler(e)),
+      switchMap(() => this.mousemove$.pipe(
+        takeUntil(this.mouseup$.pipe(
+          tap(e => this.mouseUpHandler(e))
+        ))
+      )),
+      tap(e => this.mouseMoveHandler(e)),
+    ).subscribe()
 
     if (options) this.init(options)
   }
@@ -88,9 +103,10 @@ export default abstract class BaseCanvas {
   }
 
   destroy() {
-    this.canvas.removeEventListener('mousedown', this.mouseDownHandler)
-    this.canvas.removeEventListener('mousemove', this.mouseMoveHandler)
-    document.removeEventListener('mouseup', this.mouseUpHandler)
+    if(this.subscription) {
+      this.subscription.unsubscribe()
+      this.subscription = undefined
+    }
   }
 
   register(shape: Shape | Line) {
@@ -222,8 +238,6 @@ export default abstract class BaseCanvas {
 
   protected mouseDownHandler(event: MouseEvent) {
     this.onMouseDown(event)
-    this.canvas.addEventListener('mousemove', this.mouseMoveHandler)
-
     this.onMouseDownCustom(event)
   }
 
@@ -234,8 +248,6 @@ export default abstract class BaseCanvas {
 
   protected mouseUpHandler(event: MouseEvent) {
     this.onMouseUp(event)
-    this.canvas.removeEventListener('mousemove', this.mouseMoveHandler)
-
     this.onMouseUpCustom(event)
   }
 
