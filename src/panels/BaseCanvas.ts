@@ -258,7 +258,7 @@ export default abstract class BaseCanvas {
     }
     else {
       if (this.hoveredShape) {
-        this.hoveredShape.draw(this.ctx)
+        this.hoveredShape.redraw(this.ctx)
         this.hoveredShape = undefined
       }
     }

@@ -47,7 +47,7 @@ export default abstract class Line implements Selectable {
     this.lineCap = options.lineCap || this.lineCap
   }
   
-  abstract draw(ctx: CanvasRenderingContext2D): void
+  abstract draw(ctx: CanvasRenderingContext2D, options?: LineBaseOptions): void
   abstract isSelected(mousePoint: Point): boolean
   abstract stretch(mousePoint: Point): void
 }

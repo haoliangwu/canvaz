@@ -111,7 +111,7 @@ export default class RectShape extends Shape {
   }
 
   highlight(ctx: CanvasRenderingContext2D): void {
-    this.draw(ctx, {
+    this.redraw(ctx, {
       fillStyle: this.highlightBackground,
       strokeStyle: this.highlightBorder
     })

@@ -58,6 +58,12 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
     return this
   }
 
+  redraw(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions){
+    this.draw(ctx, options)
+
+    this.connections.forEach((connection, line) => line.draw(ctx))
+  }
+
   fillColor(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): Shape {
     this.fill(ctx, options)
     this.stroke(ctx, options)
