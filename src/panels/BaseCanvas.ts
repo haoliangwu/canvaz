@@ -84,7 +84,7 @@ export default abstract class BaseCanvas {
     this.mouseup$ = fromEvent<MouseEvent>(document, 'mouseup')
 
     this.mouseBaseSub = this.mousedown$.pipe(
-      tap(e=> this.mouseDownHandler(e)),
+      tap(e => this.mouseDownHandler(e)),
       switchMap(() => this.mousemove$.pipe(
         takeUntil(this.mouseup$.pipe(
           tap(e => this.mouseUpHandler(e))
@@ -110,7 +110,7 @@ export default abstract class BaseCanvas {
   }
 
   destroy() {
-    if(this.mouseBaseSub) {
+    if (this.mouseBaseSub) {
       this.mouseBaseSub.unsubscribe()
       this.mouseBaseSub = undefined
     }
@@ -197,6 +197,9 @@ export default abstract class BaseCanvas {
   }
 
   endConnect(mousePoint: Point) {
+    // 如果当前不是有效的连线状态 则 直接返回
+    if (!this.connection || !this.connectionStartShape) return
+
     this.relativeMousePoint = mousePoint
     const shape = this.selectShape(this.relativeMousePoint)
 
@@ -206,7 +209,7 @@ export default abstract class BaseCanvas {
     if (shape && shape.isSelectedBorder(this.relativeMousePoint) && !isSameReference(this.connectionStartShape, shape)) {
       const borderDirection = shape.getSelectedBorder(this.relativeMousePoint)
 
-      if (this.connection && borderDirection) {
+      if (borderDirection) {
         const connectionEndPoint = shape.calcConnectionPoint(borderDirection)
 
         if (connectionEndPoint) {
@@ -220,6 +223,7 @@ export default abstract class BaseCanvas {
         }
       }
     } else {
+      this.connectionStartShape.unregisterConnectionPoint(this.connection)
       this.removeConnection(this.connection)
     }
 
@@ -247,13 +251,13 @@ export default abstract class BaseCanvas {
     const shape = this.selectShape(this.relativeMousePoint)
 
     if (shape) {
-      if(this.hoveredShape == shape) return
+      if (this.hoveredShape == shape) return
 
       this.hoveredShape = shape
       this.hoveredShape.highlight(this.ctx)
     }
     else {
-      if(this.hoveredShape) {
+      if (this.hoveredShape) {
         this.hoveredShape.draw(this.ctx)
         this.hoveredShape = undefined
       }
