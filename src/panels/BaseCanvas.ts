@@ -27,13 +27,16 @@ export default abstract class BaseCanvas {
   protected connectionStartShape?: Shape
   protected connection?: Line
 
+  protected hoveredShape?: Shape
+
   protected mousePoint: Point = { x: 0, y: 0 }
 
   protected mousedown$: Observable<MouseEvent>
   protected mousemove$: Observable<MouseEvent>
   protected mouseup$: Observable<MouseEvent>
 
-  private subscription?: Subscription
+  private mouseBaseSub?: Subscription
+  private hoverCanvasSub?: Subscription
 
   protected set relativeMousePoint(val: Point) {
     this.mousePoint = val
@@ -80,7 +83,7 @@ export default abstract class BaseCanvas {
     this.mousemove$ = fromEvent<MouseEvent>(this.canvas, 'mousemove')
     this.mouseup$ = fromEvent<MouseEvent>(document, 'mouseup')
 
-    this.subscription = this.mousedown$.pipe(
+    this.mouseBaseSub = this.mousedown$.pipe(
       tap(e=> this.mouseDownHandler(e)),
       switchMap(() => this.mousemove$.pipe(
         takeUntil(this.mouseup$.pipe(
@@ -88,6 +91,10 @@ export default abstract class BaseCanvas {
         ))
       )),
       tap(e => this.mouseMoveHandler(e)),
+    ).subscribe()
+
+    this.hoverCanvasSub = this.mousemove$.pipe(
+      tap(e => this.hoverCanvasHandler(e))
     ).subscribe()
 
     if (options) this.init(options)
@@ -103,9 +110,9 @@ export default abstract class BaseCanvas {
   }
 
   destroy() {
-    if(this.subscription) {
-      this.subscription.unsubscribe()
-      this.subscription = undefined
+    if(this.mouseBaseSub) {
+      this.mouseBaseSub.unsubscribe()
+      this.mouseBaseSub = undefined
     }
   }
 
@@ -133,15 +140,11 @@ export default abstract class BaseCanvas {
     this.clear()
 
     this.shapes.forEach(shape => {
-      this.ctx.save()
       shape.draw(this.ctx)
-      this.ctx.restore()
     })
 
     this.lines.forEach(line => {
-      this.ctx.save()
       line.draw(this.ctx)
-      this.ctx.restore()
     })
   }
 
@@ -236,6 +239,27 @@ export default abstract class BaseCanvas {
     this.removeElement(this.shapes, shape)
   }
 
+  protected onCanvasHover(event: MouseEvent): void {
+    const { clientX, clientY } = event
+    const mousePoint = this.getMousePoint(event)
+
+    this.relativeMousePoint = mousePoint
+    const shape = this.selectShape(this.relativeMousePoint)
+
+    if (shape) {
+      if(this.hoveredShape == shape) return
+
+      this.hoveredShape = shape
+      this.hoveredShape.highlight(this.ctx)
+    }
+    else {
+      if(this.hoveredShape) {
+        this.hoveredShape.draw(this.ctx)
+        this.hoveredShape = undefined
+      }
+    }
+  }
+
   protected mouseDownHandler(event: MouseEvent) {
     this.onMouseDown(event)
     this.onMouseDownCustom(event)
@@ -251,6 +275,10 @@ export default abstract class BaseCanvas {
     this.onMouseUpCustom(event)
   }
 
+  protected hoverCanvasHandler(event: MouseEvent) {
+    this.onCanvasHover(event)
+  }
+
   protected removeElement<T>(arr: T[], item: T) {
     const idx = arr.indexOf(item)
 
@@ -259,5 +287,10 @@ export default abstract class BaseCanvas {
     }
 
     this.draw()
+  }
+
+  protected getMousePoint(event: MouseEvent): Point {
+    const { clientX, clientY } = event
+    return { x: clientX, y: clientY }
   }
 }

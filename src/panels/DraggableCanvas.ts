@@ -16,7 +16,7 @@ export default class DraggableCanvas extends BaseCanvas {
 
   protected onMouseDown(event: MouseEvent): void {
     const { clientX, clientY } = event
-    const mousePoint = { x: clientX, y: clientY }
+    const mousePoint = this.getMousePoint(event)
 
     if (!this.startConnect(mousePoint)) {
       this.startDrag(mousePoint)
@@ -25,7 +25,7 @@ export default class DraggableCanvas extends BaseCanvas {
 
   protected onMouseMove(event: MouseEvent): void {
     const { clientX, clientY } = event
-    const mousePoint = { x: clientX, y: clientY }
+    const mousePoint = this.getMousePoint(event)
 
     this.connect(mousePoint)
     this.drag(mousePoint)
@@ -33,7 +33,7 @@ export default class DraggableCanvas extends BaseCanvas {
 
   protected onMouseUp(event: MouseEvent): void {
     const { clientX, clientY } = event
-    const mousePoint = { x: clientX, y: clientY }
+    const mousePoint = this.getMousePoint(event)
 
     this.endConnect(mousePoint)
     this.endDrag(mousePoint)

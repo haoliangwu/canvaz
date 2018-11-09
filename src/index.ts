@@ -11,7 +11,8 @@ const rect1 = new RectShape({
   strokeStyle: 'black',
   width: 100,
   height: 100,
-  startPoint: { x: 50, y: 100 }
+  startPoint: { x: 50, y: 100 },
+  highlightBorder: 'gray'
 })
 
 const rect2 = new RectShape({
@@ -20,7 +21,8 @@ const rect2 = new RectShape({
   strokeStyle: 'black',
   width: 100,
   height: 100,
-  startPoint: { x: 300, y: 100 }
+  startPoint: { x: 300, y: 100 },
+  highlightBorder: 'gray'
 })
 
 draggableCanvas.register(rect1)

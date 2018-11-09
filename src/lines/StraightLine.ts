@@ -27,6 +27,7 @@ export default class StraightLine extends Line {
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
+    ctx.save()
     ctx.beginPath()
     ctx.lineWidth = this.lineWidth
     ctx.lineCap = this.lineCap
@@ -34,6 +35,7 @@ export default class StraightLine extends Line {
     ctx.moveTo(this.startPoint.x, this.startPoint.y)
     ctx.lineTo(this.endPoint.x, this.endPoint.y)
     ctx.stroke()
+    ctx.restore()
   }
 
   stretch(mousePoint: Point): void {
