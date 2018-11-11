@@ -3,7 +3,7 @@ import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
 import { Observable, fromEvent, Subscription } from 'rxjs';
-import { switchMap, takeUntil, tap } from 'rxjs/operators';
+import { switchMap, takeUntil, tap, publish, refCount } from 'rxjs/operators';
 
 export interface BaseCanvasOptions {
   width?: number,
@@ -80,8 +80,11 @@ export default abstract class BaseCanvas {
     }
 
     this.mousedown$ = fromEvent<MouseEvent>(this.canvas, 'mousedown')
+      .pipe(publish(), refCount())
     this.mousemove$ = fromEvent<MouseEvent>(this.canvas, 'mousemove')
+      .pipe(publish(), refCount())
     this.mouseup$ = fromEvent<MouseEvent>(document, 'mouseup')
+      .pipe(publish(), refCount())
 
     this.mouseBaseSub = this.mousedown$.pipe(
       tap(e => this.mouseDownHandler(e)),
@@ -160,8 +163,7 @@ export default abstract class BaseCanvas {
     }
   }
 
-  startConnect(mousePoint: Point): boolean {
-    this.relativeMousePoint = mousePoint
+  startConnect(event: MouseEvent): boolean {
     const shape = this.selectShape(this.relativeMousePoint)
 
     if (shape && shape.isSelectedBorder(this.relativeMousePoint)) {
@@ -188,19 +190,17 @@ export default abstract class BaseCanvas {
     return false
   }
 
-  connect(mousePoint: Point) {
+  connect(event: MouseEvent) {
     if (this.connection) {
-      this.relativeMousePoint = mousePoint
       this.connection.stretch(this.relativeMousePoint)
       this.draw()
     }
   }
 
-  endConnect(mousePoint: Point) {
+  endConnect(event: MouseEvent) {
     // 如果当前不是有效的连线状态 则 直接返回
     if (!this.connection || !this.connectionStartShape) return
 
-    this.relativeMousePoint = mousePoint
     const shape = this.selectShape(this.relativeMousePoint)
 
     // 当前鼠标指向某个图形
@@ -244,10 +244,6 @@ export default abstract class BaseCanvas {
   }
 
   protected onCanvasHover(event: MouseEvent): void {
-    const { clientX, clientY } = event
-    const mousePoint = this.getMousePoint(event)
-
-    this.relativeMousePoint = mousePoint
     const shape = this.selectShape(this.relativeMousePoint)
 
     if (shape) {
@@ -265,21 +261,29 @@ export default abstract class BaseCanvas {
   }
 
   protected mouseDownHandler(event: MouseEvent) {
+    this.relativeMousePoint = this.getMousePoint(event)
+
     this.onMouseDown(event)
     this.onMouseDownCustom(event)
   }
 
   protected mouseMoveHandler(event: MouseEvent) {
+    this.relativeMousePoint = this.getMousePoint(event)
+
     this.onMouseMove(event)
     this.onMouseMoveCustom(event)
   }
 
   protected mouseUpHandler(event: MouseEvent) {
+    this.relativeMousePoint = this.getMousePoint(event)
+
     this.onMouseUp(event)
     this.onMouseUpCustom(event)
   }
 
   protected hoverCanvasHandler(event: MouseEvent) {
+    this.relativeMousePoint = this.getMousePoint(event)
+
     this.onCanvasHover(event)
   }
 

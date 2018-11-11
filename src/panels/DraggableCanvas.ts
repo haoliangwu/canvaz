@@ -15,35 +15,25 @@ export default class DraggableCanvas extends BaseCanvas {
   }
 
   protected onMouseDown(event: MouseEvent): void {
-    const { clientX, clientY } = event
-    const mousePoint = this.getMousePoint(event)
-
-    if (!this.startConnect(mousePoint)) {
-      this.startDrag(mousePoint)
+    if (!this.startConnect(event)) {
+      this.startDrag(event)
     }
   }
 
   protected onMouseMove(event: MouseEvent): void {
-    const { clientX, clientY } = event
-    const mousePoint = this.getMousePoint(event)
-
-    this.connect(mousePoint)
-    this.drag(mousePoint)
+    this.connect(event)
+    this.drag(event)
   }
 
   protected onMouseUp(event: MouseEvent): void {
-    const { clientX, clientY } = event
-    const mousePoint = this.getMousePoint(event)
-
-    this.endConnect(mousePoint)
-    this.endDrag(mousePoint)
+    this.endConnect(event)
+    this.endDrag(event)
   }
 
-  startDrag(mousePoint: Point): boolean {
-    this.relativeMousePoint = mousePoint
+  startDrag(event: MouseEvent): boolean {
     const shape = this.selectShape(this.relativeMousePoint)
 
-    if (shape && shape.isSelectedContent(mousePoint)) {
+    if (shape && shape.isSelectedContent(this.relativeMousePoint)) {
       this.dragStartPoint = { x: this.relativeMousePoint.x, y: this.relativeMousePoint.y }
       this.dragShape = shape
 
@@ -55,15 +45,14 @@ export default class DraggableCanvas extends BaseCanvas {
     return false
   }
 
-  drag(mousePoint: Point) {
+  drag(event: MouseEvent) {
     if (this.dragShape) {
-      this.relativeMousePoint = mousePoint
       this.dragShape.move(this.relativeMousePoint)
       this.draw()
     }
   }
 
-  endDrag(mousePoint: Point) {
+  endDrag(event: MouseEvent) {
     this.dragStartPoint = undefined
     this.dragShape = undefined
   }
