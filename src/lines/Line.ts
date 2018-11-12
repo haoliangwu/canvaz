@@ -21,11 +21,11 @@ export default abstract class Line implements Selectable {
   protected lineWidth: number
   protected lineCap: LineCapType
 
-  protected startPoint?: Point
-  protected endPoint?: Point
+  startPoint?: Point
+  endPoint?: Point
 
-  protected startShape?: Shape;
-  protected endShape?: Shape;
+  startShape?: Shape;
+  endShape?: Shape;
 
   get head(): Shape {
     return this.startShape as Shape

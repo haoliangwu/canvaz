@@ -6,8 +6,8 @@ export interface LineOptions extends LineBaseOptions {
 }
 
 export default class StraightLine extends Line {
-  protected startPoint: Point;
-  protected endPoint: Point;
+  startPoint: Point;
+  endPoint: Point;
   
   constructor(options: LineOptions) {
     super(options)

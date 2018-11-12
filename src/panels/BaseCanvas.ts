@@ -3,7 +3,7 @@ import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
 import { Observable, fromEvent, Subscription } from 'rxjs';
-import { switchMap, takeUntil, tap, publish, refCount } from 'rxjs/operators';
+import { switchMap, takeUntil, tap, publish, refCount, map, filter } from 'rxjs/operators';
 
 export interface BaseCanvasOptions {
   width?: number,
@@ -34,6 +34,9 @@ export default abstract class BaseCanvas {
   protected mousedown$: Observable<MouseEvent>
   protected mousemove$: Observable<MouseEvent>
   protected mouseup$: Observable<MouseEvent>
+  protected selectedShape$?: Observable<Nullable<Shape>>
+  protected selectedShapeBorder$?: Observable<Nullable<Shape>>
+  protected selectedShapeContent$?: Observable<Nullable<Shape>>
 
   private mouseBaseSub?: Subscription
   private hoverCanvasSub?: Subscription
@@ -80,11 +83,25 @@ export default abstract class BaseCanvas {
     }
 
     this.mousedown$ = fromEvent<MouseEvent>(this.canvas, 'mousedown')
+      .pipe(tap(event => this.relativeMousePoint = this.getMousePoint(event)))
       .pipe(publish(), refCount())
     this.mousemove$ = fromEvent<MouseEvent>(this.canvas, 'mousemove')
+      .pipe(tap(event => this.relativeMousePoint = this.getMousePoint(event)))
       .pipe(publish(), refCount())
     this.mouseup$ = fromEvent<MouseEvent>(document, 'mouseup')
+      .pipe(tap(event => this.relativeMousePoint = this.getMousePoint(event)))
       .pipe(publish(), refCount())
+
+    this.init(options)
+  }
+
+  init(options: BaseCanvasOptions = {}) {
+    this.width = options.width || this.canvas.width
+    this.height = options.height || this.canvas.height
+
+    if (options.onMouseDown) this.onMouseDownCustom = options.onMouseDown.bind(this)
+    if (options.onMouseMove) this.onMouseMoveCustom = options.onMouseMove.bind(this)
+    if (options.onMouseUp) this.onMouseUpCustom = options.onMouseUp.bind(this)
 
     this.mouseBaseSub = this.mousedown$.pipe(
       tap(e => this.mouseDownHandler(e)),
@@ -100,16 +117,18 @@ export default abstract class BaseCanvas {
       tap(e => this.hoverCanvasHandler(e))
     ).subscribe()
 
-    if (options) this.init(options)
-  }
+    this.selectedShape$ = this.mousedown$.pipe(
+      map(() => this.selectShape(this.relativeMousePoint)),
+      filter(shape => shape instanceof Shape)
+    )
 
-  init(options: BaseCanvasOptions) {
-    this.width = options.width || this.canvas.width
-    this.height = options.height || this.canvas.height
+    this.selectedShapeBorder$ = this.selectedShape$.pipe(
+      filter(shape => shape ? shape.isSelectedBorder(this.relativeMousePoint) : false)
+    )
 
-    if (options.onMouseDown) this.onMouseDownCustom = options.onMouseDown.bind(this)
-    if (options.onMouseMove) this.onMouseMoveCustom = options.onMouseMove.bind(this)
-    if (options.onMouseUp) this.onMouseUpCustom = options.onMouseUp.bind(this)
+    this.selectedShapeContent$ = this.selectedShape$.pipe(
+      filter(shape => shape ? shape.isSelectedContent(this.relativeMousePoint) : false)
+    )
   }
 
   destroy() {
@@ -261,29 +280,21 @@ export default abstract class BaseCanvas {
   }
 
   protected mouseDownHandler(event: MouseEvent) {
-    this.relativeMousePoint = this.getMousePoint(event)
-
     this.onMouseDown(event)
     this.onMouseDownCustom(event)
   }
 
   protected mouseMoveHandler(event: MouseEvent) {
-    this.relativeMousePoint = this.getMousePoint(event)
-
     this.onMouseMove(event)
     this.onMouseMoveCustom(event)
   }
 
   protected mouseUpHandler(event: MouseEvent) {
-    this.relativeMousePoint = this.getMousePoint(event)
-
     this.onMouseUp(event)
     this.onMouseUpCustom(event)
   }
 
   protected hoverCanvasHandler(event: MouseEvent) {
-    this.relativeMousePoint = this.getMousePoint(event)
-
     this.onCanvasHover(event)
   }
 

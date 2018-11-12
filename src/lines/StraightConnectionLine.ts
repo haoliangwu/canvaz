@@ -7,8 +7,8 @@ export interface ConnectionLineOptions extends LineOptions {
 }
 
 export default class StraightConnectionLine extends StraightLine {
-  protected startPoint: ConnectionPoint;
-  protected endPoint: ConnectionPoint;
+  startPoint: ConnectionPoint;
+  endPoint: ConnectionPoint;
   
   constructor(options: ConnectionLineOptions) {
     super(options)
