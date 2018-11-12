@@ -2,7 +2,7 @@ import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
-import { Observable, fromEvent, Subscription } from 'rxjs';
+import { Observable, fromEvent, Subscription, of } from 'rxjs';
 import { switchMap, takeUntil, tap, publish, refCount, map, filter } from 'rxjs/operators';
 
 export interface BaseCanvasOptions {
@@ -13,7 +13,15 @@ export interface BaseCanvasOptions {
   onMouseUp?: (event: MouseEvent) => void
 }
 
+export interface BaseConvasMode {
+  connecting: boolean
+}
+
 export default abstract class BaseCanvas {
+  protected mode: BaseConvasMode = {
+    connecting: false
+  }
+
   protected canvas: HTMLCanvasElement
   protected ctx: CanvasRenderingContext2D
   protected startPoint: Point = { x: 0, y: 0 }
@@ -38,8 +46,8 @@ export default abstract class BaseCanvas {
   protected selectedShapeBorder$?: Observable<Nullable<Shape>>
   protected selectedShapeContent$?: Observable<Nullable<Shape>>
 
-  private mouseBaseSub?: Subscription
-  private hoverCanvasSub?: Subscription
+  private connect$$?: Subscription
+  private hover$$?: Subscription
 
   protected set relativeMousePoint(val: Point) {
     this.mousePoint = val
@@ -54,14 +62,6 @@ export default abstract class BaseCanvas {
   get context(): CanvasRenderingContext2D {
     return this.ctx
   }
-
-  private onMouseDownCustom: (event: MouseEvent) => void = noopMouseEventHandler
-  private onMouseMoveCustom: (event: MouseEvent) => void = noopMouseEventHandler
-  private onMouseUpCustom: (event: MouseEvent) => void = noopMouseEventHandler
-
-  protected abstract onMouseDown(event: MouseEvent): void
-  protected abstract onMouseUp(event: MouseEvent): void
-  protected abstract onMouseMove(event: MouseEvent): void
 
   constructor(canvas: HTMLCanvasElement | string, options?: BaseCanvasOptions) {
     if (canvas instanceof HTMLCanvasElement) {
@@ -99,23 +99,9 @@ export default abstract class BaseCanvas {
     this.width = options.width || this.canvas.width
     this.height = options.height || this.canvas.height
 
-    if (options.onMouseDown) this.onMouseDownCustom = options.onMouseDown.bind(this)
-    if (options.onMouseMove) this.onMouseMoveCustom = options.onMouseMove.bind(this)
-    if (options.onMouseUp) this.onMouseUpCustom = options.onMouseUp.bind(this)
-
-    this.mouseBaseSub = this.mousedown$.pipe(
-      tap(e => this.mouseDownHandler(e)),
-      switchMap(() => this.mousemove$.pipe(
-        takeUntil(this.mouseup$.pipe(
-          tap(e => this.mouseUpHandler(e))
-        ))
-      )),
-      tap(e => this.mouseMoveHandler(e)),
-    ).subscribe()
-
-    this.hoverCanvasSub = this.mousemove$.pipe(
-      tap(e => this.hoverCanvasHandler(e))
-    ).subscribe()
+    // if (options.onMouseDown) this.onMouseDownCustom = options.onMouseDown.bind(this)
+    // if (options.onMouseMove) this.onMouseMoveCustom = options.onMouseMove.bind(this)
+    // if (options.onMouseUp) this.onMouseUpCustom = options.onMouseUp.bind(this)
 
     this.selectedShape$ = this.mousedown$.pipe(
       map(() => this.selectShape(this.relativeMousePoint)),
@@ -131,10 +117,31 @@ export default abstract class BaseCanvas {
     )
   }
 
+  mount() {
+    this.connect$$ = this.mousedown$.pipe(
+      filter(event => this.startConnect(event)),
+      switchMap(() => this.mousemove$.pipe(
+        takeUntil(this.mouseup$.pipe(
+          tap(event => this.endConnect(event))
+        ))
+      )),
+      tap(event => this.connect(event))
+    ).subscribe()
+
+    this.hover$$ = this.mousemove$.pipe(
+      tap(event => this.hoverShape(event))
+    ).subscribe()
+  }
+
   destroy() {
-    if (this.mouseBaseSub) {
-      this.mouseBaseSub.unsubscribe()
-      this.mouseBaseSub = undefined
+    if (this.connect$$) {
+      this.connect$$.unsubscribe()
+      this.connect$$ = undefined
+    }
+
+    if(this.hover$$) {
+      this.hover$$.unsubscribe()
+      this.hover$$ = undefined
     }
   }
 
@@ -203,6 +210,8 @@ export default abstract class BaseCanvas {
       shape.registerConnectionPoint(this.connection, connectionStartPoint)
       this.lines.push(this.connection)
 
+      this.mode.connecting = true
+
       return true
     }
 
@@ -248,6 +257,7 @@ export default abstract class BaseCanvas {
 
     this.connection = undefined
     this.connectionStartShape = undefined
+    this.mode.connecting = false
   }
 
   removeConnection(line?: Line) {
@@ -262,7 +272,7 @@ export default abstract class BaseCanvas {
     this.removeElement(this.shapes, shape)
   }
 
-  protected onCanvasHover(event: MouseEvent): void {
+  protected hoverShape(event: MouseEvent): void {
     const shape = this.selectShape(this.relativeMousePoint)
 
     if (shape) {
@@ -277,25 +287,6 @@ export default abstract class BaseCanvas {
         this.hoveredShape = undefined
       }
     }
-  }
-
-  protected mouseDownHandler(event: MouseEvent) {
-    this.onMouseDown(event)
-    this.onMouseDownCustom(event)
-  }
-
-  protected mouseMoveHandler(event: MouseEvent) {
-    this.onMouseMove(event)
-    this.onMouseMoveCustom(event)
-  }
-
-  protected mouseUpHandler(event: MouseEvent) {
-    this.onMouseUp(event)
-    this.onMouseUpCustom(event)
-  }
-
-  protected hoverCanvasHandler(event: MouseEvent) {
-    this.onCanvasHover(event)
   }
 
   protected removeElement<T>(arr: T[], item: T) {

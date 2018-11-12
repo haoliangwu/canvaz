@@ -2,35 +2,58 @@ import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import StraightLine from "@lines/StraightLine";
 import { arrayRemove, isSameReference } from "@utils/index";
-import BaseCanvas, { BaseCanvasOptions } from "@panels/BaseCanvas";
+import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/BaseCanvas";
+import { of, iif, Observable, Subscription } from "rxjs";
+import { filter, tap, switchMap, takeUntil } from "rxjs/operators";
 
 export interface DraggableCanvasOptions extends BaseCanvasOptions { }
 
+export interface DraggableConvasMode extends BaseConvasMode{
+  dragging: boolean
+}
+
 export default class DraggableCanvas extends BaseCanvas {
+  protected mode: DraggableConvasMode = {
+    connecting: false,
+    dragging: false
+  }
+
   protected dragStartPoint?: Point
   protected dragShape?: Shape
 
+  private drag$$?: Subscription
+
   constructor(canvas: HTMLCanvasElement, options?: DraggableCanvasOptions) {
     super(canvas, options)
+
+    this.mount()
   }
 
-  protected onMouseDown(event: MouseEvent): void {
-    if (!this.startConnect(event)) {
-      this.startDrag(event)
+  mount() {
+    super.mount()
+
+    this.drag$$ = this.mousedown$.pipe(
+      filter(event => !this.mode.connecting),
+      tap(event => this.startDrag(event)),
+      switchMap(() => this.mousemove$.pipe(
+        takeUntil(this.mouseup$.pipe(
+          tap(event => this.endDrag(event))
+        ))
+      )),
+      tap(event => this.drag(event))
+    ).subscribe()
+  }
+
+  destroy() {
+    super.destroy()
+
+    if(this.drag$$) {
+      this.drag$$.unsubscribe()
+      this.drag$$ = undefined
     }
   }
 
-  protected onMouseMove(event: MouseEvent): void {
-    this.connect(event)
-    this.drag(event)
-  }
-
-  protected onMouseUp(event: MouseEvent): void {
-    this.endConnect(event)
-    this.endDrag(event)
-  }
-
-  startDrag(event: MouseEvent): boolean {
+  startDrag(event: MouseEvent): void {
     const shape = this.selectShape(this.relativeMousePoint)
 
     if (shape && shape.isSelectedContent(this.relativeMousePoint)) {
@@ -38,22 +61,20 @@ export default class DraggableCanvas extends BaseCanvas {
       this.dragShape = shape
 
       shape.setOffset(this.relativeMousePoint)
-
-      return true
-    }
-
-    return false
-  }
-
-  drag(event: MouseEvent) {
-    if (this.dragShape) {
-      this.dragShape.move(this.relativeMousePoint)
-      this.draw()
+      this.mode.dragging = true
     }
   }
 
-  endDrag(event: MouseEvent) {
+  drag(event: MouseEvent): void {
+    if (!this.dragShape) return
+
+    this.dragShape.move(this.relativeMousePoint)
+    this.draw()
+  }
+
+  endDrag(event: MouseEvent): void {
     this.dragStartPoint = undefined
     this.dragShape = undefined
+    this.mode.dragging = false
   }
 }
