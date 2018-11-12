@@ -139,7 +139,7 @@ export default abstract class BaseCanvas {
       this.connect$$ = undefined
     }
 
-    if(this.hover$$) {
+    if (this.hover$$) {
       this.hover$$.unsubscribe()
       this.hover$$ = undefined
     }
@@ -283,7 +283,7 @@ export default abstract class BaseCanvas {
     }
     else {
       if (this.hoveredShape) {
-        this.hoveredShape.redraw(this.ctx)
+        this.hoveredShape.cancelHighlight(this.ctx)
         this.hoveredShape = undefined
       }
     }

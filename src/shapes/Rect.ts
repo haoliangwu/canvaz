@@ -14,8 +14,6 @@ export interface RectShapeOptions extends ShapeBaseOptions {
   startPoint: Point;
   width: number;
   height: number;
-  highlightBackground?: string
-  highlightBorder?: string
 }
 
 export default class RectShape extends Shape {
@@ -27,9 +25,6 @@ export default class RectShape extends Shape {
   protected contentHeight: number;
 
   protected startPoint: Point;
-
-  protected highlightBackground: string
-  protected highlightBorder: string
 
   protected get centerPoint(): Point {
     return {
@@ -80,9 +75,6 @@ export default class RectShape extends Shape {
     this.contentHeight = this.height - this.lineWidth
 
     this.startPoint = options.startPoint
-
-    this.highlightBackground = options.highlightBackground || this.fillStyle
-    this.highlightBorder = options.highlightBorder || this.strokeStyle
   }
 
   draw(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions) {
@@ -111,10 +103,7 @@ export default class RectShape extends Shape {
   }
 
   highlight(ctx: CanvasRenderingContext2D): void {
-    this.redraw(ctx, {
-      fillStyle: this.highlightBackground,
-      strokeStyle: this.highlightBorder
-    })
+    super.highlight(ctx)
   }
 
   setOffset(mousePoint: Point): void {

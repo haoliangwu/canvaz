@@ -4,15 +4,28 @@ export interface ShapeBaseOptions {
   fillStyle?: string;
   strokeStyle?: string;
   lineWidth?: number;
+  highlightFillStyle?: string
+  highlightStrokeStyle?: string
+}
+
+export interface ShapeBaseMode {
+  highlighted: boolean
 }
 
 export default abstract class Shape implements Selectable, Connectable<Line, Shape> {
+  protected mode: ShapeBaseMode = {
+    highlighted: false
+  }
+
   protected offsetX: number = 0
   protected offsetY: number = 0
   protected fillStyle: string
   protected strokeStyle: string
   protected lineWidth: number
   protected halfLineWidth: number
+
+  protected highlightFillStyle: string
+  protected highlightStrokeStyle: string
 
   connections = new Map<Line, ConnectionPoint>()
 
@@ -21,11 +34,12 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
     this.strokeStyle = options.strokeStyle || ''
     this.lineWidth = options.lineWidth || 2
     this.halfLineWidth = this.lineWidth / 2
+    this.highlightFillStyle = options.highlightFillStyle || this.fillStyle
+    this.highlightStrokeStyle = options.highlightStrokeStyle || this.strokeStyle
   }
 
   abstract draw(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): void
   abstract move(mousePoint: Point): void
-  abstract highlight(ctx: CanvasRenderingContext2D): void
   abstract setOffset(mousePoint: Point): void
   abstract isSelected(mousePoint: Point): boolean
   abstract isSelectedContent(mousePoint: Point): boolean
@@ -33,32 +47,25 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   abstract calcConnectionPoint(borderDirection?: string): Nullable<ConnectionPoint>
   abstract getSelectedBorder(mousePoint: Point): Nullable<string>
 
-  private fill(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): Shape {
-    if (options) {
-      ctx.fillStyle = options.fillStyle || this.fillStyle
-    } else {
-      ctx.fillStyle = this.fillStyle
-    }
-    ctx.fill()
+  highlight(ctx: CanvasRenderingContext2D): void {
+    this.mode.highlighted = true
 
-    return this
+    this.redraw(ctx)
   }
 
-  private stroke(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): Shape {
-    if (options) {
-      ctx.lineWidth = options.lineWidth || this.lineWidth
-      ctx.strokeStyle = options.strokeStyle || this.strokeStyle
-    } else {
-      ctx.lineWidth = this.lineWidth
-      ctx.strokeStyle = this.strokeStyle
-    }
+  cancelHighlight(ctx: CanvasRenderingContext2D): void {
+    this.mode.highlighted = false
 
-    ctx.stroke()
-
-    return this
+    this.redraw(ctx)
   }
 
-  redraw(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions){
+  restoreMode(mode?: Partial<ShapeBaseMode>){
+    this.mode = Object.assign(this.mode, {
+      highlighted: false
+    }, mode)
+  }
+
+  redraw(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions) {
     this.draw(ctx, options)
 
     this.connections.forEach((connection, line) => line.draw(ctx))
@@ -97,5 +104,50 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
     connectionPoint.y = connectionPoint.origin.y + connectionPoint.offsetY
 
     return connectionPoint
+  }
+
+  private fill(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): Shape {
+    if (this.mode.highlighted) {
+      if (options) {
+        ctx.fillStyle = options.highlightFillStyle || this.highlightFillStyle || this.fillStyle
+      } else {
+        ctx.fillStyle = this.highlightFillStyle || this.fillStyle
+      }
+    } else {
+      if (options) {
+        ctx.fillStyle = options.fillStyle || this.fillStyle
+      } else {
+        ctx.fillStyle = this.fillStyle
+      }
+    }
+    ctx.fill()
+
+    return this
+  }
+
+  private stroke(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): Shape {
+    if (options) {
+      ctx.lineWidth = options.lineWidth || this.lineWidth
+    } else {
+      ctx.lineWidth = this.lineWidth
+    }
+
+    if (this.mode.highlighted) {
+      if (options) {
+        ctx.strokeStyle = options.highlightStrokeStyle || this.highlightStrokeStyle || this.strokeStyle
+      } else {
+        ctx.strokeStyle = this.highlightStrokeStyle || this.strokeStyle
+      }
+    } else {
+      if (options) {
+        ctx.strokeStyle = options.strokeStyle || this.strokeStyle
+      } else {
+        ctx.strokeStyle = this.strokeStyle
+      }
+    }
+
+    ctx.stroke()
+
+    return this
   }
 }
