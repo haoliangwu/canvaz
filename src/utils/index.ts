@@ -22,6 +22,13 @@ export function isInTriRange(mp: Point, width: number, height: number): boolean 
   return mp.y < mp.x * height / width
 }
 
+export function isInCircleRange(mp: Point, cp: Point, radius: number) {
+  const x = mp.x - cp.x
+  const y = mp.y - cp.y
+  
+  return Math.pow(x, 2) + Math.pow(y, 2) <= Math.pow(radius, 2)
+}
+
 export function calcDistanceBetweenPoints(sp: Point, ep: Point) {
   const w = Math.abs(ep.x - sp.x)
   const h = Math.abs(ep.y - sp.y)

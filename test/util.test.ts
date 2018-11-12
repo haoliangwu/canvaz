@@ -2,14 +2,14 @@ import * as _ from '@utils/index';
 
 describe('test utils', () => {
   test('isInRectRange', () => {
-    const mp1 = {x: 2, y: 2}
-    const mp2 = {x: 3, y: 2}
-    const mp3 = {x: 2, y: 4}
-    const mp4 = {x: 4, y: 3}
-    const sp = {x: 1, y: 1}
+    const mp1 = { x: 2, y: 2 }
+    const mp2 = { x: 3, y: 2 }
+    const mp3 = { x: 2, y: 4 }
+    const mp4 = { x: 4, y: 3 }
+    const sp = { x: 1, y: 1 }
     const width = 2
     const height = 2
-    
+
     expect(_.isInRectRange(mp1, sp, width, height)).toBe(true)
     expect(_.isInRectRange(mp2, sp, width, height)).toBe(true)
     expect(_.isInRectRange(mp3, sp, width, height)).toBe(false)
@@ -17,10 +17,10 @@ describe('test utils', () => {
   });
 
   test('isInTriRange', () => {
-    const mp1 = { x: 4, y: 1}
-    const mp2 = { x: 2, y: 4}
-    const mp3 = { x: 6, y: 1}
-    const mp4 = { x: 7, y: 2}
+    const mp1 = { x: 4, y: 1 }
+    const mp2 = { x: 2, y: 4 }
+    const mp3 = { x: 6, y: 1 }
+    const mp4 = { x: 7, y: 2 }
     const width = 4
     const height = 4
 
@@ -28,6 +28,24 @@ describe('test utils', () => {
     expect(_.isInTriRange(mp2, width, height)).toBe(false)
     expect(_.isInTriRange(mp3, width, height)).toBe(true)
     expect(_.isInTriRange(mp4, width, height)).toBe(false)
+  });
+
+  test('isInCircleRange', () => {
+    const radius = 3
+    const cp = { x: 1, y: 2 }
+    const mp1 = {x: 3, y: 0}
+    const mp2 = {x: 2, y: 1}
+    const mp3 = {x: -3, y: 0}
+    const mp4 = {x: 2, y: 5}
+    const mp5 = {x: -2, y: 2}
+    const mp6 = {x: 4, y: 0}
+
+    expect(_.isInCircleRange(mp1, cp, radius)).toBe(true)
+    expect(_.isInCircleRange(mp2, cp, radius)).toBe(true)
+    expect(_.isInCircleRange(mp3, cp, radius)).toBe(false)
+    expect(_.isInCircleRange(mp4, cp, radius)).toBe(false)
+    expect(_.isInCircleRange(mp5, cp, radius)).toBe(true)
+    expect(_.isInCircleRange(mp6, cp, radius)).toBe(false)
   });
 
   test('calcDistanceBetweenPoints', () => {
