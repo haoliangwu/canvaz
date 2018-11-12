@@ -189,7 +189,19 @@ export default abstract class BaseCanvas {
     }
   }
 
-  startConnect(event: MouseEvent): boolean {
+  removeConnection(line?: Line) {
+    if (!line) return
+
+    this.removeElement(this.lines, line)
+  }
+
+  removeShape(shape?: Shape) {
+    if (!shape) return
+
+    this.removeElement(this.shapes, shape)
+  }
+
+  protected startConnect(event: MouseEvent): boolean {
     const shape = this.selectShape(this.relativeMousePoint)
 
     if (shape && shape.isSelectedBorder(this.relativeMousePoint)) {
@@ -218,14 +230,14 @@ export default abstract class BaseCanvas {
     return false
   }
 
-  connect(event: MouseEvent) {
+  protected connect(event: MouseEvent) {
     if (this.connection) {
       this.connection.stretch(this.relativeMousePoint)
       this.draw()
     }
   }
 
-  endConnect(event: MouseEvent) {
+  protected endConnect(event: MouseEvent) {
     // 如果当前不是有效的连线状态 则 直接返回
     if (!this.connection || !this.connectionStartShape) return
 
@@ -258,18 +270,6 @@ export default abstract class BaseCanvas {
     this.connection = undefined
     this.connectionStartShape = undefined
     this.mode.connecting = false
-  }
-
-  removeConnection(line?: Line) {
-    if (!line) return
-
-    this.removeElement(this.lines, line)
-  }
-
-  removeShape(shape?: Shape) {
-    if (!shape) return
-
-    this.removeElement(this.shapes, shape)
   }
 
   protected hoverShape(event: MouseEvent): void {

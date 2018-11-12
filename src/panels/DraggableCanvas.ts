@@ -53,7 +53,7 @@ export default class DraggableCanvas extends BaseCanvas {
     }
   }
 
-  startDrag(event: MouseEvent): void {
+  protected startDrag(event: MouseEvent): void {
     const shape = this.selectShape(this.relativeMousePoint)
 
     if (shape && shape.isSelectedContent(this.relativeMousePoint)) {
@@ -65,14 +65,14 @@ export default class DraggableCanvas extends BaseCanvas {
     }
   }
 
-  drag(event: MouseEvent): void {
+  protected drag(event: MouseEvent): void {
     if (!this.dragShape) return
 
     this.dragShape.move(this.relativeMousePoint)
     this.draw()
   }
 
-  endDrag(event: MouseEvent): void {
+  protected endDrag(event: MouseEvent): void {
     this.dragStartPoint = undefined
     this.dragShape = undefined
     this.mode.dragging = false
