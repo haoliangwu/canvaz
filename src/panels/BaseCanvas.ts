@@ -207,10 +207,7 @@ export default abstract class BaseCanvas {
     if (shape && shape.isSelectedBorder(this.relativeMousePoint)) {
       this.connectionStartShape = shape
 
-      const borderDirection = shape.getSelectedBorder(this.relativeMousePoint)
-      if (!borderDirection) return false
-
-      const connectionStartPoint = shape.calcConnectionPoint(borderDirection)
+      const connectionStartPoint = shape.calcConnectionPoint(this.relativeMousePoint)
       if (!connectionStartPoint) return false
 
       this.connection = new StraightConnectionLine({
@@ -237,39 +234,40 @@ export default abstract class BaseCanvas {
     }
   }
 
-  protected endConnect(event: MouseEvent) {
-    // 如果当前不是有效的连线状态 则 直接返回
-    if (!this.connection || !this.connectionStartShape) return
-
+  protected endConnect(event: MouseEvent): boolean {
+    let connected = false
     const shape = this.selectShape(this.relativeMousePoint)
+
+    // 如果当前不是有效的连线状态 则 直接返回
+    if (!shape || !this.connection) {
+      return this.resetConnectionStatus(connected)
+    }
+
+    const isSelectedBorder = shape.isSelectedBorder(this.relativeMousePoint)
+    const isNotStartShape = !isSameReference(this.connectionStartShape, shape)
+    const connectionEndPoint = shape.calcConnectionPoint(this.relativeMousePoint)
 
     // 当前鼠标指向某个图形
     // 且悬浮于图形的 border 上
     // 且连线的终点图形不为始点图形
-    if (shape && shape.isSelectedBorder(this.relativeMousePoint) && !isSameReference(this.connectionStartShape, shape)) {
-      const borderDirection = shape.getSelectedBorder(this.relativeMousePoint)
+    if (isSelectedBorder && isNotStartShape && connectionEndPoint) {
+      const connectionEndPoint = shape.calcConnectionPoint(this.relativeMousePoint)
 
-      if (borderDirection) {
-        const connectionEndPoint = shape.calcConnectionPoint(borderDirection)
+      // 当存在合法的 endShape 连接点时
+      if (connectionEndPoint) {
+        this.connection.update({
+          endPoint: connectionEndPoint,
+          endShape: shape
+        })
 
-        if (connectionEndPoint) {
-          this.connection.update({
-            endPoint: connectionEndPoint,
-            endShape: shape
-          })
+        shape.registerConnectionPoint(this.connection, connectionEndPoint)
+        this.draw()
 
-          shape.registerConnectionPoint(this.connection, connectionEndPoint)
-          this.draw()
-        }
-      }
-    } else {
-      this.connectionStartShape.unregisterConnectionPoint(this.connection)
-      this.removeConnection(this.connection)
-    }
+        connected = true
+      } 
+    } 
 
-    this.connection = undefined
-    this.connectionStartShape = undefined
-    this.mode.connecting = false
+    return this.resetConnectionStatus(connected)
   }
 
   protected hoverShape(event: MouseEvent): void {
@@ -302,5 +300,22 @@ export default abstract class BaseCanvas {
   protected getMousePoint(event: MouseEvent): Point {
     const { clientX, clientY } = event
     return { x: clientX, y: clientY }
+  }
+
+/**
+ * @param connected - 当前连线是否成功
+ * @return 最终的连线是否成功
+ */
+  private resetConnectionStatus(connected: boolean = false): boolean {
+    if (!connected && this.connection && this.connectionStartShape) {
+      this.connectionStartShape.unregisterConnectionPoint(this.connection)
+      this.removeConnection(this.connection)
+    }
+
+    this.connection = undefined
+    this.connectionStartShape = undefined
+    this.mode.connecting = false
+
+    return connected
   }
 }

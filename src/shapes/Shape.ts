@@ -44,7 +44,7 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   abstract isSelected(mousePoint: Point): boolean
   abstract isSelectedContent(mousePoint: Point): boolean
   abstract isSelectedBorder(mousePoint: Point): boolean
-  abstract calcConnectionPoint(borderDirection?: string): Nullable<ConnectionPoint>
+  abstract calcConnectionPoint(mousePoint: Point): Nullable<ConnectionPoint>
   abstract getSelectedBorder(mousePoint: Point): Nullable<string>
 
   highlight(ctx: CanvasRenderingContext2D): void {

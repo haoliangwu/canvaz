@@ -1,5 +1,6 @@
 import RectShape from "@shapes/Rect";
 import DraggableCanvas from "@panels/DraggableCanvas";
+import CircleShape from "@shapes/Circle";
 
 const $canvas = document.querySelector('#canvas') as HTMLCanvasElement
 
@@ -25,6 +26,16 @@ const rect2 = new RectShape({
   highlightStrokeStyle: 'gray'
 })
 
+const circle1 = new CircleShape({
+  fillStyle: 'green',
+  lineWidth: 8,
+  strokeStyle: 'black',
+  radius: 40,
+  centerPoint: { x: 150, y: 300 },
+  highlightStrokeStyle: 'gray'
+})
+
 draggableCanvas.register(rect1)
 draggableCanvas.register(rect2)
+draggableCanvas.register(circle1)
 draggableCanvas.draw()

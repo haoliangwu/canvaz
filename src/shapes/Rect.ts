@@ -77,7 +77,7 @@ export default class RectShape extends Shape {
     this.startPoint = options.startPoint
   }
 
-  draw(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions) {
+  draw(ctx: CanvasRenderingContext2D, options?: RectShapeOptions) {
     ctx.save()
     this.drawRectPath(ctx)
     this.fillColor(ctx, options)
@@ -123,7 +123,9 @@ export default class RectShape extends Shape {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
   }
 
-  calcConnectionPoint(borderDirection: string): Nullable<ConnectionPoint> {
+  calcConnectionPoint(mousePoint: Point): Nullable<ConnectionPoint> {
+    const borderDirection = this.getSelectedBorder(mousePoint)
+    
     switch (borderDirection) {
       case RectBorderDirection.TOP:
         return this.connectionPointFactory(this.topConnectionPoint)
