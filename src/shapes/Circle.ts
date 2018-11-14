@@ -71,7 +71,7 @@ export default class CircleShape extends Shape {
     return
   }
 
-  private drawCircelPath(ctx: CanvasRenderingContext2D) {
+  protected drawCircelPath(ctx: CanvasRenderingContext2D) {
     ctx.beginPath()
     ctx.arc(this.centerPoint.x, this.centerPoint.y, this.radius, 0, 2 * Math.PI, false)
   }

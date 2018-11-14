@@ -72,10 +72,15 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   }
 
   fillColor(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): Shape {
-    this.fill(ctx, options)
-    this.stroke(ctx, options)
+    return this.fillContentColor(ctx, options).fillBorderColor(ctx, options)
+  }
 
-    return this
+  fillBorderColor(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): Shape {
+    return this.stroke(ctx, options)
+  }
+
+  fillContentColor(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): Shape {
+    return this.fill(ctx, options)
   }
 
   registerConnectionPoint(line: Line, connectionPoint: ConnectionPoint): Shape {
