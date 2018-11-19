@@ -113,7 +113,7 @@ export default abstract class BaseCanvas {
     this.selectedShape$ = this.mousedown$.pipe(
       map(() => this.selectShape(this.relativeMousePoint)),
       filter(shape => shape.isSome()),
-      map(shape => shape.just())
+      map(shape => shape.some())
     )
 
     this.selectedShapeBorder$ = this.selectedShape$.pipe(
@@ -216,7 +216,7 @@ export default abstract class BaseCanvas {
 
     if (shapeM.isNone()) return false
 
-    const shape = shapeM.just()
+    const shape = shapeM.some()
 
     if (shape.isSelectedBorder(this.relativeMousePoint)) {
       this.connectionStartShape = shape
@@ -224,7 +224,7 @@ export default abstract class BaseCanvas {
       const connectionStartPoint = shape.calcConnectionPoint(this.relativeMousePoint)
       if (connectionStartPoint.isNone()) return false
 
-      const startPoint = connectionStartPoint.just()
+      const startPoint = connectionStartPoint.some()
 
       this.connection = new StraightConnectionLine({
         startPoint,
@@ -260,7 +260,7 @@ export default abstract class BaseCanvas {
       return this.resetConnectionStatus(connected)
     }
 
-    const shape = shapeM.just()
+    const shape = shapeM.some()
 
     const isSelectedBorder = shape.isSelectedBorder(this.relativeMousePoint)
     const isNotStartShape = !isSameReference(this.connectionStartShape, shape)
@@ -272,7 +272,7 @@ export default abstract class BaseCanvas {
     if (isSelectedBorder && isNotStartShape && connectionEndPoint) {
       const connectionEndPoint = shape.calcConnectionPoint(this.relativeMousePoint)
 
-      const endPoint = connectionEndPoint.just()
+      const endPoint = connectionEndPoint.some()
 
       // 当存在合法的 endShape 连接点时
       if (connectionEndPoint) {
@@ -301,7 +301,7 @@ export default abstract class BaseCanvas {
       return
     }
 
-    const shape = shapeM.just()
+    const shape = shapeM.some()
 
     if (isSameReference(shape, this.hoveredShape)) return
 

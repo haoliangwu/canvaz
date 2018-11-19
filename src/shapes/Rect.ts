@@ -125,7 +125,7 @@ export default class RectShape extends Shape {
   }
 
   calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint> {
-    const borderDirection = this.getSelectedBorder(mousePoint).just()
+    const borderDirection = this.getSelectedBorder(mousePoint).some()
     
     switch (borderDirection) {
       case RectBorderDirection.TOP:
