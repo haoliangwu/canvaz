@@ -54,9 +54,13 @@ export default class DraggableCanvas extends BaseCanvas {
   }
 
   protected startDrag(event: MouseEvent): void {
-    const shape = this.selectShape(this.relativeMousePoint)
+    const shapeM = this.selectShape(this.relativeMousePoint)
 
-    if (shape && shape.isSelectedContent(this.relativeMousePoint)) {
+    if (shapeM.isNone()) return
+
+    const shape = shapeM.just()
+
+    if (shape.isSelectedContent(this.relativeMousePoint)) {
       this.dragStartPoint = { x: this.relativeMousePoint.x, y: this.relativeMousePoint.y }
       this.dragShape = shape
 

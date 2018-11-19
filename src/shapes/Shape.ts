@@ -1,4 +1,5 @@
 import Line from "@lines/Line";
+import { Maybe } from "monet";
 
 export interface ShapeBaseOptions {
   fillStyle?: string;
@@ -10,6 +11,17 @@ export interface ShapeBaseOptions {
 
 export interface ShapeBaseMode {
   highlighted: boolean
+}
+
+export interface Selectable {
+  isSelected(mousePoint: Point): boolean
+}
+
+export interface Connectable<L, S> {
+  connections: Map<L, ConnectionPoint>
+  registerConnectionPoint(line: L, connectionPoint: ConnectionPoint): S
+  unregisterConnectionPoint(line: L): S
+  getConnectionPoint(line: L): Maybe<ConnectionPoint>
 }
 
 export default abstract class Shape implements Selectable, Connectable<Line, Shape> {
@@ -44,8 +56,8 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   abstract isSelected(mousePoint: Point): boolean
   abstract isSelectedContent(mousePoint: Point): boolean
   abstract isSelectedBorder(mousePoint: Point): boolean
-  abstract calcConnectionPoint(mousePoint: Point): Nullable<ConnectionPoint>
-  abstract getSelectedBorder(mousePoint: Point): Nullable<string>
+  abstract calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint>
+  abstract getSelectedBorder(mousePoint: Point): Maybe<string>
 
   highlight(ctx: CanvasRenderingContext2D): void {
     this.mode.highlighted = true
@@ -59,7 +71,7 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
     this.redraw(ctx)
   }
 
-  restoreMode(mode?: Partial<ShapeBaseMode>){
+  restoreMode(mode?: Partial<ShapeBaseMode>) {
     this.mode = Object.assign(this.mode, {
       highlighted: false
     }, mode)
@@ -98,10 +110,12 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
     return this
   }
 
-  getConnectionPoint(line: Line): Nullable<ConnectionPoint> {
+  getConnectionPoint(line: Line): Maybe<ConnectionPoint> {
     if (this.connections.has(line)) {
-      return this.connections.get(line)
+      return Maybe.of(this.connections.get(line) as ConnectionPoint)
     }
+
+    return Maybe.None()
   }
 
   syncConnectionPoint(connectionPoint: ConnectionPoint): ConnectionPoint {

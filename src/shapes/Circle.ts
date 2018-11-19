@@ -2,6 +2,7 @@ import Shape, { ShapeBaseOptions } from "@shapes/Shape";
 import { isInCircleRange } from "@utils/index";
 import { LineOptions } from "@lines/StraightLine";
 import Line from "@lines/Line";
+import { Maybe } from "monet";
 
 export interface CircleShapeOptions extends ShapeBaseOptions {
   radius: number;
@@ -61,14 +62,14 @@ export default class CircleShape extends Shape {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
   }
 
-  calcConnectionPoint(mousePoint: Point): Nullable<ConnectionPoint> {
+  calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint> {
     // TODO
-    return
+    return Maybe.None()
   }
 
-  getSelectedBorder(mousePoint: Point): string | undefined {
+  getSelectedBorder(mousePoint: Point): Maybe<string> {
     // TODO
-    return
+    return Maybe.None()
   }
 
   protected drawCircelPath(ctx: CanvasRenderingContext2D) {

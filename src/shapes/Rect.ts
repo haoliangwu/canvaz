@@ -2,6 +2,7 @@ import Shape, { ShapeBaseOptions } from "./Shape";
 import { isInRectRange, isInTriRange } from "@utils/index";
 import Line from "@lines/Line";
 import { LineOptions } from "@lines/StraightLine";
+import { Maybe } from "monet";
 
 export enum RectBorderDirection {
   TOP = 'top',
@@ -123,26 +124,28 @@ export default class RectShape extends Shape {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
   }
 
-  calcConnectionPoint(mousePoint: Point): Nullable<ConnectionPoint> {
-    const borderDirection = this.getSelectedBorder(mousePoint)
+  calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint> {
+    const borderDirection = this.getSelectedBorder(mousePoint).just()
     
     switch (borderDirection) {
       case RectBorderDirection.TOP:
-        return this.connectionPointFactory(this.topConnectionPoint)
+        return Maybe.of(this.connectionPointFactory(this.topConnectionPoint))
       case RectBorderDirection.RIGHT:
-        return this.connectionPointFactory(this.rightConnectionPoint)
+        return Maybe.of(this.connectionPointFactory(this.rightConnectionPoint))
       case RectBorderDirection.BOTTOM:
-        return this.connectionPointFactory(this.bottomConnectionPoint)
+        return Maybe.of(this.connectionPointFactory(this.bottomConnectionPoint))
       case RectBorderDirection.LEFT:
-        return this.connectionPointFactory(this.leftConnectionPoint)
+        return Maybe.of(this.connectionPointFactory(this.leftConnectionPoint))
     }
   }
 
-  getSelectedBorder(mousePoint: Point): Nullable<RectBorderDirection> {
-    if (this.isSelectTopTri(mousePoint)) return RectBorderDirection.TOP
-    if (this.isSelectRightTri(mousePoint)) return RectBorderDirection.RIGHT
-    if (this.isSelectBottomTri(mousePoint)) return RectBorderDirection.BOTTOM
-    if (this.isSelectLeftTri(mousePoint)) return RectBorderDirection.LEFT
+  getSelectedBorder(mousePoint: Point): Maybe<RectBorderDirection> {
+    if (this.isSelectTopTri(mousePoint)) return Maybe.of(RectBorderDirection.TOP)
+    if (this.isSelectRightTri(mousePoint)) return Maybe.of(RectBorderDirection.RIGHT)
+    if (this.isSelectBottomTri(mousePoint)) return Maybe.of(RectBorderDirection.BOTTOM)
+    if (this.isSelectLeftTri(mousePoint)) return Maybe.of(RectBorderDirection.LEFT)
+
+    return Maybe.None()
   }
 
   private connectionPointFactory(connectionPoint: Point): ConnectionPoint {

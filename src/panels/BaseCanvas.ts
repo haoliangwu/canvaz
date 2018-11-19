@@ -4,6 +4,7 @@ import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/inde
 import StraightConnectionLine from "@lines/StraightConnectionLine";
 import { Observable, fromEvent, Subscription, of } from 'rxjs';
 import { switchMap, takeUntil, tap, publish, refCount, map, filter } from 'rxjs/operators';
+import { Some, Maybe } from 'monet';
 
 export interface BaseCanvasOptions {
   width?: number,
@@ -42,9 +43,9 @@ export default abstract class BaseCanvas {
   protected mousedown$: Observable<MouseEvent>
   protected mousemove$: Observable<MouseEvent>
   protected mouseup$: Observable<MouseEvent>
-  protected selectedShape$?: Observable<Nullable<Shape>>
-  protected selectedShapeBorder$?: Observable<Nullable<Shape>>
-  protected selectedShapeContent$?: Observable<Nullable<Shape>>
+  protected selectedShape$?: Observable<Shape>
+  protected selectedShapeBorder$?: Observable<Shape>
+  protected selectedShapeContent$?: Observable<Shape>
 
   private connect$$?: Subscription
   private hover$$?: Subscription
@@ -83,13 +84,19 @@ export default abstract class BaseCanvas {
     }
 
     this.mousedown$ = fromEvent<MouseEvent>(this.canvas, 'mousedown')
-      .pipe(tap(event => this.relativeMousePoint = this.getMousePoint(event)))
+      .pipe(tap(event => {
+        this.relativeMousePoint = this.getMousePoint(event)
+      }))
       .pipe(publish(), refCount())
     this.mousemove$ = fromEvent<MouseEvent>(this.canvas, 'mousemove')
-      .pipe(tap(event => this.relativeMousePoint = this.getMousePoint(event)))
+      .pipe(tap(event => {
+        this.relativeMousePoint = this.getMousePoint(event)
+      }))
       .pipe(publish(), refCount())
     this.mouseup$ = fromEvent<MouseEvent>(document, 'mouseup')
-      .pipe(tap(event => this.relativeMousePoint = this.getMousePoint(event)))
+      .pipe(tap(event => {
+        this.relativeMousePoint = this.getMousePoint(event)
+      }))
       .pipe(publish(), refCount())
 
     this.init(options)
@@ -105,7 +112,8 @@ export default abstract class BaseCanvas {
 
     this.selectedShape$ = this.mousedown$.pipe(
       map(() => this.selectShape(this.relativeMousePoint)),
-      filter(shape => shape instanceof Shape)
+      filter(shape => shape.isSome()),
+      map(shape => shape.just())
     )
 
     this.selectedShapeBorder$ = this.selectedShape$.pipe(
@@ -181,12 +189,14 @@ export default abstract class BaseCanvas {
     this.ctx.clearRect(0, 0, this.width, this.height)
   }
 
-  selectShape(relativePoint: Point): Shape | undefined {
+  selectShape(relativePoint: Point): Maybe<Shape> {
     for (let i = this.shapes.length - 1; i >= 0; i--) {
       const shape = this.shapes[i]
-      if (shape.isSelected(relativePoint)) return shape
+      if (shape.isSelected(relativePoint)) return Some(shape)
       else continue
     }
+
+    return Maybe.None()
   }
 
   removeConnection(line?: Line) {
@@ -202,21 +212,27 @@ export default abstract class BaseCanvas {
   }
 
   protected startConnect(event: MouseEvent): boolean {
-    const shape = this.selectShape(this.relativeMousePoint)
+    const shapeM = this.selectShape(this.relativeMousePoint)
 
-    if (shape && shape.isSelectedBorder(this.relativeMousePoint)) {
+    if (shapeM.isNone()) return false
+
+    const shape = shapeM.just()
+
+    if (shape.isSelectedBorder(this.relativeMousePoint)) {
       this.connectionStartShape = shape
 
       const connectionStartPoint = shape.calcConnectionPoint(this.relativeMousePoint)
-      if (!connectionStartPoint) return false
+      if (connectionStartPoint.isNone()) return false
+
+      const startPoint = connectionStartPoint.just()
 
       this.connection = new StraightConnectionLine({
-        startPoint: connectionStartPoint,
-        endPoint: connectionStartPoint,
+        startPoint,
+        endPoint: startPoint,
         startShape: shape
       })
 
-      shape.registerConnectionPoint(this.connection, connectionStartPoint)
+      shape.registerConnectionPoint(this.connection, startPoint)
       this.lines.push(this.connection)
 
       this.mode.connecting = true
@@ -236,12 +252,15 @@ export default abstract class BaseCanvas {
 
   protected endConnect(event: MouseEvent): boolean {
     let connected = false
-    const shape = this.selectShape(this.relativeMousePoint)
+
+    const shapeM = this.selectShape(this.relativeMousePoint)
 
     // 如果当前不是有效的连线状态 则 直接返回
-    if (!shape || !this.connection) {
+    if (shapeM.isNone() || !this.connection) {
       return this.resetConnectionStatus(connected)
     }
+
+    const shape = shapeM.just()
 
     const isSelectedBorder = shape.isSelectedBorder(this.relativeMousePoint)
     const isNotStartShape = !isSameReference(this.connectionStartShape, shape)
@@ -253,38 +272,41 @@ export default abstract class BaseCanvas {
     if (isSelectedBorder && isNotStartShape && connectionEndPoint) {
       const connectionEndPoint = shape.calcConnectionPoint(this.relativeMousePoint)
 
+      const endPoint = connectionEndPoint.just()
+
       // 当存在合法的 endShape 连接点时
       if (connectionEndPoint) {
         this.connection.update({
-          endPoint: connectionEndPoint,
+          endPoint,
           endShape: shape
         })
 
-        shape.registerConnectionPoint(this.connection, connectionEndPoint)
+        shape.registerConnectionPoint(this.connection, endPoint)
         this.draw()
 
         connected = true
-      } 
-    } 
+      }
+    }
 
     return this.resetConnectionStatus(connected)
   }
 
   protected hoverShape(event: MouseEvent): void {
-    const shape = this.selectShape(this.relativeMousePoint)
-
-    if (shape) {
-      if (this.hoveredShape == shape) return
-
-      this.hoveredShape = shape
-      this.hoveredShape.highlight(this.ctx)
-    }
-    else {
+    const shapeM = this.selectShape(this.relativeMousePoint)
+    if (shapeM.isNone()) {
       if (this.hoveredShape) {
         this.hoveredShape.cancelHighlight(this.ctx)
         this.hoveredShape = undefined
       }
+      return
     }
+
+    const shape = shapeM.just()
+
+    if (isSameReference(shape, this.hoveredShape)) return
+
+    this.hoveredShape = shape
+    this.hoveredShape.highlight(this.ctx)
   }
 
   protected removeElement<T>(arr: T[], item: T) {
@@ -302,10 +324,10 @@ export default abstract class BaseCanvas {
     return { x: clientX, y: clientY }
   }
 
-/**
- * @param connected - 当前连线是否成功
- * @return 最终的连线是否成功
- */
+  /**
+   * @param connected - 当前连线是否成功
+   * @return 最终的连线是否成功
+   */
   private resetConnectionStatus(connected: boolean = false): boolean {
     if (!connected && this.connection && this.connectionStartShape) {
       this.connectionStartShape.unregisterConnectionPoint(this.connection)
