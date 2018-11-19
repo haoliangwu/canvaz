@@ -1,5 +1,5 @@
 import Line from "@lines/Line";
-import { Maybe } from "monet";
+import { Maybe, None, Some } from "monet";
 
 export interface ShapeBaseOptions {
   fillStyle?: string;
@@ -112,10 +112,10 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
 
   getConnectionPoint(line: Line): Maybe<ConnectionPoint> {
     if (this.connections.has(line)) {
-      return Maybe.of(this.connections.get(line) as ConnectionPoint)
+      return Maybe.fromNull(this.connections.get(line) as ConnectionPoint)
     }
 
-    return Maybe.None()
+    return None()
   }
 
   syncConnectionPoint(connectionPoint: ConnectionPoint): ConnectionPoint {

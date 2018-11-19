@@ -4,7 +4,7 @@ import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/inde
 import StraightConnectionLine from "@lines/StraightConnectionLine";
 import { Observable, fromEvent, Subscription, of } from 'rxjs';
 import { switchMap, takeUntil, tap, publish, refCount, map, filter } from 'rxjs/operators';
-import { Some, Maybe } from 'monet';
+import { Some, Maybe, None } from 'monet';
 
 export interface BaseCanvasOptions {
   width?: number,
@@ -190,13 +190,15 @@ export default abstract class BaseCanvas {
   }
 
   selectShape(relativePoint: Point): Maybe<Shape> {
+    let selectedShape = undefined
+    
     for (let i = this.shapes.length - 1; i >= 0; i--) {
       const shape = this.shapes[i]
-      if (shape.isSelected(relativePoint)) return Some(shape)
-      else continue
+      if (shape.isSelected(relativePoint)) selectedShape = shape
     }
 
-    return Maybe.None()
+    // undefined as None<Shape> type
+    return Maybe.fromNull(selectedShape as Shape)
   }
 
   removeConnection(line?: Line) {
@@ -269,9 +271,7 @@ export default abstract class BaseCanvas {
     // 当前鼠标指向某个图形
     // 且悬浮于图形的 border 上
     // 且连线的终点图形不为始点图形
-    if (isSelectedBorder && isNotStartShape && connectionEndPoint) {
-      const connectionEndPoint = shape.calcConnectionPoint(this.relativeMousePoint)
-
+    if (isSelectedBorder && isNotStartShape && connectionEndPoint.isSome()) {
       const endPoint = connectionEndPoint.some()
 
       // 当存在合法的 endShape 连接点时
