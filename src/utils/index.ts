@@ -1,7 +1,7 @@
 export function noopMouseEventHandler(event: MouseEvent) { }
 
-export function isInRectRange(mp: Point, sp: Point, width: number, height: number): boolean {
-  return sp.x <= mp.x && mp.x <= (sp.x + width) && sp.y <= mp.y && mp.y <= (sp.y + height)
+export function isInRectRange(mp: Point, op: Point, width: number, height: number): boolean {
+  return op.x <= mp.x && mp.x <= (op.x + width) && op.y <= mp.y && mp.y <= (op.y + height)
 }
 
 /*
