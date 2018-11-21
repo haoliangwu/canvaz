@@ -12,7 +12,7 @@ export enum RectBorderDirection {
 }
 
 export interface RectShapeOptions extends ShapeBaseOptions {
-  startPoint: Point;
+  originPoint: Point;
   width: number;
   height: number;
 }
@@ -25,43 +25,43 @@ export default class RectShape extends Shape {
   protected offsetHeight: number;
   protected contentHeight: number;
 
-  protected startPoint: Point;
+  protected originPoint: Point;
 
   protected get centerPoint(): Point {
     return {
-      x: this.startPoint.x + this.width / 2,
-      y: this.startPoint.y + this.height / 2
+      x: this.originPoint.x + this.width / 2,
+      y: this.originPoint.y + this.height / 2
     }
   }
 
   protected get offsetStartPoint(): Point {
     return {
-      x: this.startPoint.x - this.halfLineWidth,
-      y: this.startPoint.y - this.halfLineWidth
+      x: this.originPoint.x - this.halfLineWidth,
+      y: this.originPoint.y - this.halfLineWidth
     }
   }
 
   protected get contentStartPoint(): Point {
     return {
-      x: this.startPoint.x + this.halfLineWidth,
-      y: this.startPoint.y + this.halfLineWidth
+      x: this.originPoint.x + this.halfLineWidth,
+      y: this.originPoint.y + this.halfLineWidth
     }
   }
 
   get topConnectionPoint(): Point {
-    return { x: this.centerPoint.x, y: this.startPoint.y }
+    return { x: this.centerPoint.x, y: this.originPoint.y }
   }
 
   get rightConnectionPoint(): Point {
-    return { x: this.startPoint.x + this.width, y: this.centerPoint.y }
+    return { x: this.originPoint.x + this.width, y: this.centerPoint.y }
   }
 
   get bottomConnectionPoint(): Point {
-    return { x: this.centerPoint.x, y: this.startPoint.y + this.height }
+    return { x: this.centerPoint.x, y: this.originPoint.y + this.height }
   }
 
   get leftConnectionPoint(): Point {
-    return { x: this.startPoint.x, y: this.centerPoint.y }
+    return { x: this.originPoint.x, y: this.centerPoint.y }
   }
 
 
@@ -75,7 +75,7 @@ export default class RectShape extends Shape {
     this.offsetHeight = this.height + this.lineWidth
     this.contentHeight = this.height - this.lineWidth
 
-    this.startPoint = options.startPoint
+    this.originPoint = options.originPoint
   }
 
   draw(ctx: CanvasRenderingContext2D, options?: RectShapeOptions) {
@@ -86,8 +86,8 @@ export default class RectShape extends Shape {
   }
 
   move(mousePoint: Point): void {
-    this.startPoint.x = mousePoint.x - this.offsetX
-    this.startPoint.y = mousePoint.y - this.offsetY
+    this.originPoint.x = mousePoint.x - this.offsetX
+    this.originPoint.y = mousePoint.y - this.offsetY
 
     if (this.connections.size > 0) {
       this.connections.forEach((cp: ConnectionPoint, l: Line) => {
@@ -108,8 +108,8 @@ export default class RectShape extends Shape {
   }
 
   setOffset(mousePoint: Point): void {
-    this.offsetX = mousePoint.x - this.startPoint.x
-    this.offsetY = mousePoint.y - this.startPoint.y
+    this.offsetX = mousePoint.x - this.originPoint.x
+    this.offsetY = mousePoint.y - this.originPoint.y
   }
 
   isSelected(mousePoint: Point): boolean {
@@ -150,9 +150,9 @@ export default class RectShape extends Shape {
 
   private connectionPointFactory(connectionPoint: Point): ConnectionPoint {
     return {
-      origin: this.startPoint,
-      offsetX: connectionPoint.x - this.startPoint.x,
-      offsetY: connectionPoint.y - this.startPoint.y,
+      origin: this.originPoint,
+      offsetX: connectionPoint.x - this.originPoint.x,
+      offsetY: connectionPoint.y - this.originPoint.y,
       ...connectionPoint,
     }
   }
@@ -206,21 +206,21 @@ export default class RectShape extends Shape {
   }
 
   private isSelectRightRect(mousePoint: Point): boolean {
-    const startPoint = {
+    const originPoint = {
       x: this.offsetStartPoint.x + this.offsetWidth / 2,
       y: this.offsetStartPoint.y
     }
 
-    return isInRectRange(mousePoint, startPoint, this.offsetWidth / 2, this.offsetHeight)
+    return isInRectRange(mousePoint, originPoint, this.offsetWidth / 2, this.offsetHeight)
   }
 
   private isSelectBottomRect(mousePoint: Point): boolean {
-    const startPoint = {
+    const originPoint = {
       x: this.offsetStartPoint.x,
       y: this.offsetStartPoint.y + this.offsetHeight / 2
     }
 
-    return isInRectRange(mousePoint, startPoint, this.offsetWidth, this.offsetHeight / 2)
+    return isInRectRange(mousePoint, originPoint, this.offsetWidth, this.offsetHeight / 2)
   }
 
   private isSelectLeftRect(mousePoint: Point): boolean {
@@ -229,6 +229,6 @@ export default class RectShape extends Shape {
 
   private drawRectPath(ctx: CanvasRenderingContext2D) {
     ctx.beginPath()
-    ctx.rect(this.startPoint.x, this.startPoint.y, this.width, this.height)
+    ctx.rect(this.originPoint.x, this.originPoint.y, this.width, this.height)
   }
 }

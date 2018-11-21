@@ -25,7 +25,7 @@ export default abstract class BaseCanvas {
 
   protected canvas: HTMLCanvasElement
   protected ctx: CanvasRenderingContext2D
-  protected startPoint: Point = { x: 0, y: 0 }
+  protected originPoint: Point = { x: 0, y: 0 }
 
   protected width = 0
   protected height = 0
@@ -55,8 +55,8 @@ export default abstract class BaseCanvas {
   }
   protected get relativeMousePoint(): Point {
     return {
-      x: this.mousePoint.x - this.startPoint.x,
-      y: this.mousePoint.y - this.startPoint.y
+      x: this.mousePoint.x - this.originPoint.x,
+      y: this.mousePoint.y - this.originPoint.y
     }
   }
 
@@ -78,7 +78,7 @@ export default abstract class BaseCanvas {
     this.height = this.canvas.height
 
     const { top, left } = this.canvas.getBoundingClientRect()
-    this.startPoint = {
+    this.originPoint = {
       x: left + window.pageXOffset,
       y: top + window.pageYOffset,
     }
@@ -127,7 +127,8 @@ export default abstract class BaseCanvas {
 
   mount() {
     this.connect$$ = this.mousedown$.pipe(
-      filter(event => this.startConnect(event)),
+      tap(event => this.startConnect(event)),
+      filter(() => this.mode.connecting),
       switchMap(() => this.mousemove$.pipe(
         takeUntil(this.mouseup$.pipe(
           tap(event => this.endConnect(event))
