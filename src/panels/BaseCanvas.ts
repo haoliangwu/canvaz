@@ -2,7 +2,7 @@ import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
-import { Observable, fromEvent, Subscription, of, Subject, empty, merge } from 'rxjs';
+import { Observable, fromEvent, Subscription, of, Subject, EMPTY, merge } from 'rxjs';
 import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, partition, catchError } from 'rxjs/operators';
 import { Some, Maybe, None } from 'monet';
 
@@ -381,7 +381,7 @@ export default abstract class BaseCanvas {
       tasks$.push(task.pipe(
         catchError(err => {
           console.error('error occur in task:${id}')
-          return empty()
+          return EMPTY
         })
       ))
     })
