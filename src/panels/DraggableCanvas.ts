@@ -21,18 +21,12 @@ export default class DraggableCanvas extends BaseCanvas {
   protected dragStartPoint?: Point
   protected dragShape?: Shape
 
-  private drag$$?: Subscription
-
   constructor(canvas: HTMLCanvasElement, options?: DraggableCanvasOptions) {
     super(canvas, options)
-
-    this.mount()
   }
 
   mount() {
-    super.mount()
-
-    this.drag$$ = this.mousedown$.pipe(
+    const dragTask$ = this.mousedown$.pipe(
       filter(event => !this.mode.connecting),
       tap(event => this.startDrag(event)),
       switchMap(() => this.mousemove$.pipe(
@@ -41,16 +35,11 @@ export default class DraggableCanvas extends BaseCanvas {
         ))
       )),
       tap(event => this.drag(event))
-    ).subscribe()
-  }
+    )
 
-  destroy() {
-    super.destroy()
+    this.registerTask(Symbol('drag'), dragTask$)
 
-    if(this.drag$$) {
-      this.drag$$.unsubscribe()
-      this.drag$$ = undefined
-    }
+    return super.mount()
   }
 
   protected startDrag(event: MouseEvent): void {

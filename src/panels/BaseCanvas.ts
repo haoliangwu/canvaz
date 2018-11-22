@@ -2,8 +2,8 @@ import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
-import { Observable, fromEvent, Subscription, of, Subject, interval, empty, iif } from 'rxjs';
-import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, partition } from 'rxjs/operators';
+import { Observable, fromEvent, Subscription, of, Subject, empty, merge } from 'rxjs';
+import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, partition, catchError } from 'rxjs/operators';
 import { Some, Maybe, None } from 'monet';
 
 export interface BaseCanvasOptions {
@@ -42,14 +42,14 @@ export default abstract class BaseCanvas {
 
   draw$: Subject<any> = new Subject()
 
+  protected mouseenter$: Observable<MouseEvent>
+  protected mouseleave$: Observable<MouseEvent>
   protected mousedown$: Observable<MouseEvent>
   protected mousemove$: Observable<MouseEvent>
   protected mouseup$: Observable<MouseEvent>
 
-  private draw$$?: Subscription
-  private connect$$?: Subscription
-  private hoverShape$$?: Subscription
-  private hoverCanvas$$?: Subscription
+  protected tasks: Map<string | symbol, Observable<any>> = new Map()
+  protected tasks$$?: Subscription
 
   protected set relativeMousePoint(val: Point) {
     this.mousePoint = val
@@ -88,6 +88,8 @@ export default abstract class BaseCanvas {
       y: top + window.pageYOffset,
     }
 
+    this.mouseenter$ = fromEvent<MouseEvent>(this.canvas, 'mouseenter')
+    this.mouseleave$ = fromEvent<MouseEvent>(this.canvas, 'mouseleave')
     this.mousedown$ = fromEvent<MouseEvent>(this.canvas, 'mousedown')
       .pipe(tap(event => {
         this.relativeMousePoint = this.getMousePoint(event)
@@ -111,13 +113,16 @@ export default abstract class BaseCanvas {
     this.width = options.width || this.canvas.width
     this.height = options.height || this.canvas.height
 
-    // if (options.onMouseDown) this.onMouseDownCustom = options.onMouseDown.bind(this)
-    // if (options.onMouseMove) this.onMouseMoveCustom = options.onMouseMove.bind(this)
-    // if (options.onMouseUp) this.onMouseUpCustom = options.onMouseUp.bind(this)
-  }
+    const drawTask$ = this.draw$.pipe(
+      bufferTime(50, null, 5),
+      filter(actions => actions.length > 0),
+      tap(actions => {
+        this.draw()
+      })
+    )
+    this.registerTask(Symbol('draw'), drawTask$)
 
-  mount() {
-    this.connect$$ = this.mousedown$.pipe(
+    const connectTask$ = this.mousedown$.pipe(
       tap(event => this.startConnect(event)),
       filter(() => this.mode.connecting),
       switchMap(() => this.mousemove$.pipe(
@@ -126,35 +131,51 @@ export default abstract class BaseCanvas {
         ))
       )),
       tap(event => this.connect(event))
-    ).subscribe()
+    )
+    this.registerTask(Symbol('connect'), connectTask$)
 
     const hoverMaybeShape$ = this.mousemove$.pipe(
-      map(event => this.selectShape(this.relativeMousePoint))
+      map(event => this.selectShape(this.relativeMousePoint)),
     )
     const [hoverShape$, hoverCanvas$] = partition<Maybe<Shape>>(shapeM => shapeM.isSome())(hoverMaybeShape$)
 
-    this.hoverShape$$ = hoverShape$.pipe(
+    const hoverShapeTask$ = hoverShape$.pipe(
       map(shapeM => shapeM.some()),
-    ).subscribe(this.hoverShape.bind(this))
-    this.hoverCanvas$$ = hoverCanvas$.subscribe(this.hoverCanvas.bind(this))
+      tap(this.hoverShape.bind(this))
+    )
+    this.registerTask(Symbol('hoverShape'), hoverShapeTask$)
 
-    this.draw$$ = this.draw$.pipe(
-      bufferTime(50, null, 5),
-      filter(actions => actions.length > 0),
-      tap(actions => {
-        this.draw()
-      })
-    ).subscribe()
+    const hoverCanvasTask$ = hoverCanvas$.pipe(
+      tap(this.hoverCanvas.bind(this))
+    )
+    this.registerTask(Symbol('hoverCanvas'), hoverCanvasTask$)
   }
 
-  destroy() {
-    [this.connect$$, this.hoverCanvas$$, this.hoverShape$$, this.draw$$].forEach(sub => {
-      if (sub) sub.unsubscribe()
-      sub = undefined
-    })
+  registerTask<T = any>(id: string | symbol, task: Observable<T>, override: boolean = false) {
+    if (this.tasks.has(id) && !override) {
+      return console.error(`task:${id} has been registered. Please rename current task or set override=true`)
+    }
+
+    this.tasks.set(id, task)
   }
 
-  register(shape: Shape | Line) {
+  ungisterTask<T = any>(id: string) {
+    if (this.tasks.has(id)) {
+      this.tasks.delete(id)
+
+      if (this.tasks$$) {
+        this.tasks$$.unsubscribe()
+      }
+    }
+
+    this._mount()
+  }
+
+  mount(): Subscription {
+    return this._mount()
+  }
+
+  registerShape(shape: Shape | Line) {
     if (shape instanceof Shape) {
       this.shapes.push(shape)
     }
@@ -164,7 +185,7 @@ export default abstract class BaseCanvas {
     }
   }
 
-  unregister(shape: Shape | Line) {
+  unregisterShape(shape: Shape | Line) {
     if (shape instanceof Shape) {
       arrayRemove(this.shapes, shape)
     }
@@ -253,8 +274,6 @@ export default abstract class BaseCanvas {
     if (this.connection) {
       this.connection.stretch(this.relativeMousePoint)
 
-      this.cursor = 'crosshair'
-
       this.draw$.next()
     }
   }
@@ -306,8 +325,6 @@ export default abstract class BaseCanvas {
       this.hoveredShape.toggleHoverSlot(this.relativeMousePoint)
       this.hoveredShape = undefined
       this.draw$.next()
-
-      this.cursor = 'auto'
     }
   }
 
@@ -353,5 +370,28 @@ export default abstract class BaseCanvas {
     this.mode.connecting = false
 
     return connected
+  }
+
+  private _mount() {
+    this.draw()
+
+    const tasks$: Observable<any>[] = []
+
+    this.tasks.forEach((task, id) => {
+      tasks$.push(task.pipe(
+        catchError(err => {
+          console.error('error occur in task:${id}')
+          return empty()
+        })
+      ))
+    })
+
+    this.tasks$$ = this.mouseenter$.pipe(
+      switchMap(() => merge(...tasks$).pipe(
+        takeUntil(this.mouseleave$)
+      ))
+    ).subscribe()
+
+    return this.tasks$$
   }
 }

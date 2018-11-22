@@ -64,8 +64,9 @@ const circle2 = new HollowCircleShape({
   }
 })
 
-draggableCanvas.register(rect1)
-draggableCanvas.register(rect2)
-draggableCanvas.register(circle1)
-draggableCanvas.register(circle2)
-draggableCanvas.draw()
+draggableCanvas.registerShape(rect1)
+draggableCanvas.registerShape(rect2)
+draggableCanvas.registerShape(circle1)
+draggableCanvas.registerShape(circle2)
+
+draggableCanvas.mount()
