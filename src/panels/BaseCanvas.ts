@@ -144,15 +144,10 @@ export default abstract class BaseCanvas {
   }
 
   destroy() {
-    if (this.connect$$) {
-      this.connect$$.unsubscribe()
-      this.connect$$ = undefined
-    }
-
-    if (this.hover$$) {
-      this.hover$$.unsubscribe()
-      this.hover$$ = undefined
-    }
+    [this.connect$$, this.hover$$, this.draw$$].forEach(sub => {
+      if(sub) sub.unsubscribe()
+      sub = undefined
+    })
   }
 
   register(shape: Shape | Line) {
@@ -313,7 +308,7 @@ export default abstract class BaseCanvas {
     const shape = shapeM.some()
 
     // 如果 hover 图形和上次 hover 图形不一致
-    if(this.hoveredShape && !isSameReference(shape, this.hoveredShape)) {
+    if (this.hoveredShape && !isSameReference(shape, this.hoveredShape)) {
       this.hoveredShape.cancelHighlight()
     }
 
