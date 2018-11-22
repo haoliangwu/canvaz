@@ -2,8 +2,8 @@ import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
-import { Observable, fromEvent, Subscription, of, Subject, interval, empty } from 'rxjs';
-import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime } from 'rxjs/operators';
+import { Observable, fromEvent, Subscription, of, Subject, interval, empty, iif } from 'rxjs';
+import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, partition } from 'rxjs/operators';
 import { Some, Maybe, None } from 'monet';
 
 export interface BaseCanvasOptions {
@@ -45,11 +45,11 @@ export default abstract class BaseCanvas {
   protected mousedown$: Observable<MouseEvent>
   protected mousemove$: Observable<MouseEvent>
   protected mouseup$: Observable<MouseEvent>
-  protected selectedShape$?: Observable<Shape>
 
   private draw$$?: Subscription
   private connect$$?: Subscription
-  private hover$$?: Subscription
+  private hoverShape$$?: Subscription
+  private hoverCanvas$$?: Subscription
 
   protected set relativeMousePoint(val: Point) {
     this.mousePoint = val
@@ -59,6 +59,10 @@ export default abstract class BaseCanvas {
       x: this.mousePoint.x - this.originPoint.x,
       y: this.mousePoint.y - this.originPoint.y
     }
+  }
+
+  protected set cursor(cursor: string | null) {
+    this.canvas.style.cursor = cursor
   }
 
   get context(): CanvasRenderingContext2D {
@@ -110,12 +114,6 @@ export default abstract class BaseCanvas {
     // if (options.onMouseDown) this.onMouseDownCustom = options.onMouseDown.bind(this)
     // if (options.onMouseMove) this.onMouseMoveCustom = options.onMouseMove.bind(this)
     // if (options.onMouseUp) this.onMouseUpCustom = options.onMouseUp.bind(this)
-
-    this.selectedShape$ = this.mousedown$.pipe(
-      map(() => this.selectShape(this.relativeMousePoint)),
-      filter(shape => shape.isSome()),
-      map(shape => shape.some())
-    )
   }
 
   mount() {
@@ -130,9 +128,15 @@ export default abstract class BaseCanvas {
       tap(event => this.connect(event))
     ).subscribe()
 
-    this.hover$$ = this.mousemove$.pipe(
-      tap(event => this.hoverShape(event))
-    ).subscribe()
+    const hoverMaybeShape$ = this.mousemove$.pipe(
+      map(event => this.selectShape(this.relativeMousePoint))
+    )
+    const [hoverShape$, hoverCanvas$] = partition<Maybe<Shape>>(shapeM => shapeM.isSome())(hoverMaybeShape$)
+
+    this.hoverShape$$ = hoverShape$.pipe(
+      map(shapeM => shapeM.some()),
+    ).subscribe(this.hoverShape.bind(this))
+    this.hoverCanvas$$ = hoverCanvas$.subscribe(this.hoverCanvas.bind(this))
 
     this.draw$$ = this.draw$.pipe(
       bufferTime(50, null, 5),
@@ -144,8 +148,8 @@ export default abstract class BaseCanvas {
   }
 
   destroy() {
-    [this.connect$$, this.hover$$, this.draw$$].forEach(sub => {
-      if(sub) sub.unsubscribe()
+    [this.connect$$, this.hoverCanvas$$, this.hoverShape$$, this.draw$$].forEach(sub => {
+      if (sub) sub.unsubscribe()
       sub = undefined
     })
   }
@@ -248,6 +252,9 @@ export default abstract class BaseCanvas {
   protected connect(event: MouseEvent) {
     if (this.connection) {
       this.connection.stretch(this.relativeMousePoint)
+
+      this.cursor = 'crosshair'
+
       this.draw$.next()
     }
   }
@@ -293,20 +300,18 @@ export default abstract class BaseCanvas {
     return this.resetConnectionStatus(connected)
   }
 
-  protected hoverShape(event: MouseEvent): void {
-    const shapeM = this.selectShape(this.relativeMousePoint)
-    if (shapeM.isNone()) {
-      if (this.hoveredShape) {
-        this.hoveredShape.cancelHighlight()
-        this.hoveredShape.toggleHoverSlot(this.relativeMousePoint)
-        this.hoveredShape = undefined
-        this.draw$.next()
-      }
-      return
+  protected hoverCanvas(): void {
+    if (this.hoveredShape) {
+      this.hoveredShape.cancelHighlight()
+      this.hoveredShape.toggleHoverSlot(this.relativeMousePoint)
+      this.hoveredShape = undefined
+      this.draw$.next()
+
+      this.cursor = 'auto'
     }
+  }
 
-    const shape = shapeM.some()
-
+  protected hoverShape(shape: Shape): void {
     // 如果 hover 图形和上次 hover 图形不一致
     if (this.hoveredShape && !isSameReference(shape, this.hoveredShape)) {
       this.hoveredShape.cancelHighlight()
