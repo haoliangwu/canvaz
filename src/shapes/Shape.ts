@@ -97,11 +97,11 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   abstract calcHoverSlot(mousePoint: Point): Maybe<Shape>
   abstract getSelectedBorder(mousePoint: Point): Maybe<string>
 
-  highlight(ctx: CanvasRenderingContext2D): void {
+  highlight(): void {
     this.mode.highlighted = true
   }
 
-  cancelHighlight(ctx: CanvasRenderingContext2D): void {
+  cancelHighlight(): void {
     this.mode.highlighted = false
   }
 

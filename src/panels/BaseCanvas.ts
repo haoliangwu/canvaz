@@ -2,8 +2,8 @@ import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
-import { Observable, fromEvent, Subscription, of } from 'rxjs';
-import { switchMap, takeUntil, tap, publish, refCount, map, filter } from 'rxjs/operators';
+import { Observable, fromEvent, Subscription, of, Subject, interval, empty } from 'rxjs';
+import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime } from 'rxjs/operators';
 import { Some, Maybe, None } from 'monet';
 
 export interface BaseCanvasOptions {
@@ -40,11 +40,14 @@ export default abstract class BaseCanvas {
 
   protected mousePoint: Point = { x: 0, y: 0 }
 
+  draw$: Subject<any> = new Subject()
+
   protected mousedown$: Observable<MouseEvent>
   protected mousemove$: Observable<MouseEvent>
   protected mouseup$: Observable<MouseEvent>
   protected selectedShape$?: Observable<Shape>
 
+  private draw$$?: Subscription
   private connect$$?: Subscription
   private hover$$?: Subscription
 
@@ -130,6 +133,14 @@ export default abstract class BaseCanvas {
     this.hover$$ = this.mousemove$.pipe(
       tap(event => this.hoverShape(event))
     ).subscribe()
+
+    this.draw$$ = this.draw$.pipe(
+      bufferTime(50, null, 5),
+      filter(actions => actions.length > 0),
+      tap(actions => {
+        this.draw()
+      })
+    ).subscribe()
   }
 
   destroy() {
@@ -182,10 +193,13 @@ export default abstract class BaseCanvas {
 
   selectShape(relativePoint: Point): Maybe<Shape> {
     let selectedShape = undefined
-    
+
     for (let i = this.shapes.length - 1; i >= 0; i--) {
       const shape = this.shapes[i]
-      if (shape.isSelected(relativePoint)) selectedShape = shape
+      if (shape.isSelected(relativePoint)) {
+        selectedShape = shape
+        break
+      }
     }
 
     // undefined as None<Shape> type
@@ -239,7 +253,7 @@ export default abstract class BaseCanvas {
   protected connect(event: MouseEvent) {
     if (this.connection) {
       this.connection.stretch(this.relativeMousePoint)
-      this.draw()
+      this.draw$.next()
     }
   }
 
@@ -275,7 +289,7 @@ export default abstract class BaseCanvas {
         shape.registerConnectionPoint(this.connection, endPoint)
         // 移除 hoverSlot
         shape.toggleHoverSlot()
-        this.draw()
+        this.draw$.next()
 
         connected = true
       }
@@ -288,21 +302,25 @@ export default abstract class BaseCanvas {
     const shapeM = this.selectShape(this.relativeMousePoint)
     if (shapeM.isNone()) {
       if (this.hoveredShape) {
-        this.hoveredShape.cancelHighlight(this.ctx)
+        this.hoveredShape.cancelHighlight()
         this.hoveredShape.toggleHoverSlot(this.relativeMousePoint)
         this.hoveredShape = undefined
-        this.draw()
+        this.draw$.next()
       }
       return
     }
 
     const shape = shapeM.some()
 
+    // 如果 hover 图形和上次 hover 图形不一致
+    if(this.hoveredShape && !isSameReference(shape, this.hoveredShape)) {
+      this.hoveredShape.cancelHighlight()
+    }
+
     this.hoveredShape = shape
-    this.hoveredShape.highlight(this.ctx)
-    // 如果悬浮在边框应高亮 slot
+    this.hoveredShape.highlight()
     this.hoveredShape.toggleHoverSlot(this.relativeMousePoint)
-    this.draw()
+    this.draw$.next()
   }
 
   protected removeElement<T>(arr: T[], item: T) {
@@ -312,7 +330,7 @@ export default abstract class BaseCanvas {
       arr.splice(idx, 1)
     }
 
-    this.draw()
+    this.draw$.next()
   }
 
   protected getMousePoint(event: MouseEvent): Point {
