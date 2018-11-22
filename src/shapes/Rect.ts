@@ -105,10 +105,6 @@ export default class RectShape extends Shape {
     }
   }
 
-  highlight(ctx: CanvasRenderingContext2D): void {
-    super.highlight(ctx)
-  }
-
   setOffset(mousePoint: Point): void {
     this.offsetX = mousePoint.x - this.originPoint.x
     this.offsetY = mousePoint.y - this.originPoint.y
@@ -127,9 +123,11 @@ export default class RectShape extends Shape {
   }
 
   calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint> {
-    const borderDirection = this.getSelectedBorder(mousePoint).some()
+    const borderDirectionM = this.getSelectedBorder(mousePoint)
+    
+    if(borderDirectionM.isNone()) return None()
 
-    switch (borderDirection) {
+    switch (borderDirectionM.some()) {
       case RectBorderDirection.TOP:
         return Maybe.of(this.connectionPointFactory(this.topConnectionPoint))
       case RectBorderDirection.RIGHT:
@@ -142,7 +140,10 @@ export default class RectShape extends Shape {
   }
 
   calcHoverSlot(mousePoint: Point): Maybe<Shape> {
-    const borderDirection = this.getSelectedBorder(mousePoint).some()
+    const borderDirectionM = this.getSelectedBorder(mousePoint)
+
+    if(borderDirectionM.isNone()) return None()
+
     const baseOptions = {
       radius: 4,
       lineWidth: 1,
@@ -151,7 +152,7 @@ export default class RectShape extends Shape {
     }
     let centerPoint: Point = { x: 0, y: 0 }
 
-    switch (borderDirection) {
+    switch (borderDirectionM.some()) {
       case RectBorderDirection.TOP:
         centerPoint.x = this.originPoint.x + this.width / 2
         centerPoint.y = this.originPoint.y
