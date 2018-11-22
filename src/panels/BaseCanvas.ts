@@ -153,7 +153,7 @@ export default abstract class BaseCanvas {
 
   registerTask<T = any>(id: string | symbol, task: Observable<T>, override: boolean = false) {
     if (this.tasks.has(id) && !override) {
-      return console.error(`task:${id} has been registered. Please rename current task or set override=true`)
+      return console.error(`task:${id} 已被注册. 请使用其他 task 名称或使用 override = true`)
     }
 
     this.tasks.set(id, task)
@@ -375,15 +375,13 @@ export default abstract class BaseCanvas {
   private _mount() {
     this.draw()
 
-    const tasks$: Observable<any>[] = []
-
-    this.tasks.forEach((task, id) => {
-      tasks$.push(task.pipe(
+    const tasks$: Observable<any>[] = Array.from(this.tasks.entries()).map(([id, task]) => {
+      return task.pipe(
         catchError(err => {
-          console.error('error occur in task:${id}')
+          console.error(`task:${id} 中发生错误`)
           return EMPTY
         })
-      ))
+      )
     })
 
     this.tasks$$ = this.mouseenter$.pipe(
