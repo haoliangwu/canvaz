@@ -48,3 +48,7 @@ export function arrayRemove<T>(arr: T[], item: T): T[] {
 export function isSameReference(ob1: any, ob2: any) {
   return ob1 == ob2
 }
+
+export function isSamePoint(p1: Point, p2: Point) {
+  return isSameReference(p1, p2) || (p1.x === p2.x && p1.y === p2.y)
+}

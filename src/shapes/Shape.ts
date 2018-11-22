@@ -1,12 +1,19 @@
 import Line from "@lines/Line";
 import { Maybe, None, Some } from "monet";
+import { isSamePoint } from "@utils/index";
 
 export interface ShapeBaseOptions {
   fillStyle?: string;
   strokeStyle?: string;
   lineWidth?: number;
-  highlightFillStyle?: string
-  highlightStrokeStyle?: string
+  highlight?: {
+    fillStyle?: string
+    strokeStyle?: string
+  };
+  hoverSlot?: {
+    fillStyle?: string
+    strokeStyle?: string
+  }
 }
 
 export interface ShapeBaseMode {
@@ -22,6 +29,7 @@ export interface Connectable<L, S> {
   registerConnectionPoint(line: L, connectionPoint: ConnectionPoint): S
   unregisterConnectionPoint(line: L): S
   getConnectionPoint(line: L): Maybe<ConnectionPoint>
+  getConnection(mousePoint: Point): Maybe<L>
 }
 
 export default abstract class Shape implements Selectable, Connectable<Line, Shape> {
@@ -36,18 +44,47 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   protected lineWidth: number
   protected halfLineWidth: number
 
-  protected highlightFillStyle: string
-  protected highlightStrokeStyle: string
+  private options?: ShapeBaseOptions
+
+  protected hoverSlot?: Shape
 
   connections = new Map<Line, ConnectionPoint>()
 
+  get highlightOptions() {
+    if (this.options && this.options.highlight) {
+      return {
+        fillStyle: this.options.highlight.fillStyle || this.fillStyle,
+        strokeStyle: this.options.highlight.strokeStyle || this.strokeStyle
+      }
+    }
+
+    return {
+      fillStyle: this.fillStyle,
+      strokeStyle: this.strokeStyle,
+    }
+  }
+
+  get hoverSlotOptions() {
+    if (this.options && this.options.hoverSlot) {
+      return {
+        fillStyle: this.options.hoverSlot.fillStyle || this.fillStyle,
+        strokeStyle: this.options.hoverSlot.strokeStyle || this.strokeStyle
+      }
+    }
+
+    return {
+      fillStyle: this.fillStyle,
+      strokeStyle: this.strokeStyle,
+    }
+  }
+
   constructor(options: ShapeBaseOptions) {
+    this.options = options
+
     this.fillStyle = options.fillStyle || ''
     this.strokeStyle = options.strokeStyle || ''
     this.lineWidth = options.lineWidth || 2
     this.halfLineWidth = this.lineWidth / 2
-    this.highlightFillStyle = options.highlightFillStyle || this.fillStyle
-    this.highlightStrokeStyle = options.highlightStrokeStyle || this.strokeStyle
   }
 
   abstract draw(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): void
@@ -57,18 +94,15 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   abstract isSelectedContent(mousePoint: Point): boolean
   abstract isSelectedBorder(mousePoint: Point): boolean
   abstract calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint>
+  abstract calcHoverSlot(mousePoint: Point): Maybe<Shape>
   abstract getSelectedBorder(mousePoint: Point): Maybe<string>
 
   highlight(ctx: CanvasRenderingContext2D): void {
     this.mode.highlighted = true
-
-    this.redraw(ctx)
   }
 
   cancelHighlight(ctx: CanvasRenderingContext2D): void {
     this.mode.highlighted = false
-
-    this.redraw(ctx)
   }
 
   restoreMode(mode?: Partial<ShapeBaseMode>) {
@@ -118,6 +152,14 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
     return None()
   }
 
+  getConnection(mousePoint: Point): Maybe<Line> {
+    for(let [line, cp] of this.connections.entries()) {
+      if(isSamePoint(mousePoint, cp)) return Some(line)
+    }
+
+    return None()
+  }
+
   syncConnectionPoint(connectionPoint: ConnectionPoint): ConnectionPoint {
     connectionPoint.x = connectionPoint.origin.x + connectionPoint.offsetX
     connectionPoint.y = connectionPoint.origin.y + connectionPoint.offsetY
@@ -125,12 +167,24 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
     return connectionPoint
   }
 
+  /**
+   * 根据 mousePoint 位置显示 hoverSlot
+   */
+  toggleHoverSlot(mousePoint?: Point) {
+    if(mousePoint && this.isSelectedBorder(mousePoint)) {
+      const slot = this.calcHoverSlot(mousePoint)
+      if (slot.isSome()) this.hoverSlot = slot.some()
+    } else {
+      this.hoverSlot = undefined
+    }
+  }
+
   private fill(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): Shape {
     if (this.mode.highlighted) {
-      if (options) {
-        ctx.fillStyle = options.highlightFillStyle || this.highlightFillStyle || this.fillStyle
+      if (options && options.highlight) {
+        ctx.fillStyle = options.highlight.fillStyle || this.highlightOptions.fillStyle || this.fillStyle
       } else {
-        ctx.fillStyle = this.highlightFillStyle || this.fillStyle
+        ctx.fillStyle = this.highlightOptions.fillStyle || this.fillStyle
       }
     } else {
       if (options) {
@@ -152,10 +206,10 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
     }
 
     if (this.mode.highlighted) {
-      if (options) {
-        ctx.strokeStyle = options.highlightStrokeStyle || this.highlightStrokeStyle || this.strokeStyle
+      if (options && options.highlight) {
+        ctx.strokeStyle = options.highlight.strokeStyle || this.highlightOptions.strokeStyle || this.strokeStyle
       } else {
-        ctx.strokeStyle = this.highlightStrokeStyle || this.strokeStyle
+        ctx.strokeStyle = this.highlightOptions.strokeStyle || this.strokeStyle
       }
     } else {
       if (options) {

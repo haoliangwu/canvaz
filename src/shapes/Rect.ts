@@ -2,7 +2,8 @@ import Shape, { ShapeBaseOptions } from "./Shape";
 import { isInRectRange, isInTriRange } from "@utils/index";
 import Line from "@lines/Line";
 import { LineOptions } from "@lines/StraightLine";
-import { Maybe } from "monet";
+import { Maybe, None } from "monet";
+import CircleShape from "@shapes/Circle";
 
 export enum RectBorderDirection {
   TOP = 'top',
@@ -82,6 +83,7 @@ export default class RectShape extends Shape {
     ctx.save()
     this.drawRectPath(ctx)
     this.fillColor(ctx, options)
+    this.drawSlot(ctx, options)
     ctx.restore()
   }
 
@@ -95,8 +97,8 @@ export default class RectShape extends Shape {
 
         cp = this.syncConnectionPoint(cp)
 
-        if(l.head == this) options.startPoint = cp
-        if(l.tail == this) options.endPoint = cp
+        if (l.head == this) options.startPoint = cp
+        if (l.tail == this) options.endPoint = cp
 
         l.update(options)
       })
@@ -126,7 +128,7 @@ export default class RectShape extends Shape {
 
   calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint> {
     const borderDirection = this.getSelectedBorder(mousePoint).some()
-    
+
     switch (borderDirection) {
       case RectBorderDirection.TOP:
         return Maybe.of(this.connectionPointFactory(this.topConnectionPoint))
@@ -137,6 +139,45 @@ export default class RectShape extends Shape {
       case RectBorderDirection.LEFT:
         return Maybe.of(this.connectionPointFactory(this.leftConnectionPoint))
     }
+  }
+
+  calcHoverSlot(mousePoint: Point): Maybe<Shape> {
+    const borderDirection = this.getSelectedBorder(mousePoint).some()
+    const baseOptions = {
+      radius: 4,
+      lineWidth: 1,
+      strokeStyle: this.hoverSlotOptions.strokeStyle,
+      fillStyle: this.hoverSlotOptions.fillStyle,
+    }
+    let centerPoint: Point = { x: 0, y: 0 }
+
+    switch (borderDirection) {
+      case RectBorderDirection.TOP:
+        centerPoint.x = this.originPoint.x + this.width / 2
+        centerPoint.y = this.originPoint.y
+        break
+      case RectBorderDirection.RIGHT:
+        centerPoint.x = this.originPoint.x + this.width
+        centerPoint.y = this.originPoint.y + this.height / 2
+        break
+      case RectBorderDirection.BOTTOM:
+        centerPoint.x = this.originPoint.x + this.width / 2
+        centerPoint.y = this.originPoint.y + this.height
+        break
+      case RectBorderDirection.LEFT:
+        centerPoint.x = this.originPoint.x
+        centerPoint.y = this.originPoint.y + this.height / 2
+        break
+      default:
+        return None()
+    }
+
+    if(this.getConnection(centerPoint).isNone()) return Maybe.of(new CircleShape({
+      ...baseOptions,
+      centerPoint
+    }))
+
+    return None()
   }
 
   getSelectedBorder(mousePoint: Point): Maybe<RectBorderDirection> {
@@ -230,5 +271,11 @@ export default class RectShape extends Shape {
   private drawRectPath(ctx: CanvasRenderingContext2D) {
     ctx.beginPath()
     ctx.rect(this.originPoint.x, this.originPoint.y, this.width, this.height)
+  }
+
+  private drawSlot(ctx: CanvasRenderingContext2D, options?: RectShapeOptions) {
+    if (this.hoverSlot) {
+      this.hoverSlot.draw(ctx, options)
+    }
   }
 }

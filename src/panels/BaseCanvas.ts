@@ -44,8 +44,6 @@ export default abstract class BaseCanvas {
   protected mousemove$: Observable<MouseEvent>
   protected mouseup$: Observable<MouseEvent>
   protected selectedShape$?: Observable<Shape>
-  protected selectedShapeBorder$?: Observable<Shape>
-  protected selectedShapeContent$?: Observable<Shape>
 
   private connect$$?: Subscription
   private hover$$?: Subscription
@@ -114,14 +112,6 @@ export default abstract class BaseCanvas {
       map(() => this.selectShape(this.relativeMousePoint)),
       filter(shape => shape.isSome()),
       map(shape => shape.some())
-    )
-
-    this.selectedShapeBorder$ = this.selectedShape$.pipe(
-      filter(shape => shape ? shape.isSelectedBorder(this.relativeMousePoint) : false)
-    )
-
-    this.selectedShapeContent$ = this.selectedShape$.pipe(
-      filter(shape => shape ? shape.isSelectedContent(this.relativeMousePoint) : false)
     )
   }
 
@@ -283,6 +273,8 @@ export default abstract class BaseCanvas {
         })
 
         shape.registerConnectionPoint(this.connection, endPoint)
+        // 移除 hoverSlot
+        shape.toggleHoverSlot()
         this.draw()
 
         connected = true
@@ -297,17 +289,20 @@ export default abstract class BaseCanvas {
     if (shapeM.isNone()) {
       if (this.hoveredShape) {
         this.hoveredShape.cancelHighlight(this.ctx)
+        this.hoveredShape.toggleHoverSlot(this.relativeMousePoint)
         this.hoveredShape = undefined
+        this.draw()
       }
       return
     }
 
     const shape = shapeM.some()
 
-    if (isSameReference(shape, this.hoveredShape)) return
-
     this.hoveredShape = shape
     this.hoveredShape.highlight(this.ctx)
+    // 如果悬浮在边框应高亮 slot
+    this.hoveredShape.toggleHoverSlot(this.relativeMousePoint)
+    this.draw()
   }
 
   protected removeElement<T>(arr: T[], item: T) {

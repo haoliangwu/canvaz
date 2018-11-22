@@ -13,8 +13,15 @@ const rect1 = new RectShape({
   strokeStyle: 'black',
   width: 100,
   height: 100,
-  startPoint: { x: 50, y: 100 },
-  highlightStrokeStyle: 'gray'
+  originPoint: { x: 50, y: 100 },
+  highlight: {
+    strokeStyle: 'gray',
+    fillStyle: 'yellow'
+  },
+  hoverSlot: {
+    strokeStyle: 'red',
+    fillStyle: 'red',
+  }
 })
 
 const rect2 = new RectShape({
@@ -23,8 +30,15 @@ const rect2 = new RectShape({
   strokeStyle: 'black',
   width: 100,
   height: 100,
-  startPoint: { x: 300, y: 100 },
-  highlightStrokeStyle: 'gray'
+  originPoint: { x: 300, y: 100 },
+  highlight: {
+    strokeStyle: 'gray',
+    fillStyle: 'red'
+  },
+  hoverSlot: {
+    strokeStyle: 'yellow',
+    fillStyle: 'yellow',
+  }
 })
 
 const circle1 = new CircleShape({
@@ -33,16 +47,21 @@ const circle1 = new CircleShape({
   strokeStyle: 'black',
   radius: 40,
   centerPoint: { x: 150, y: 300 },
-  highlightStrokeStyle: 'gray'
+  highlight: {
+    strokeStyle: 'gray',
+    fillStyle: 'green'
+  }
 })
 
 const circle2 = new HollowCircleShape({
-  fillStyle: 'blue',
   lineWidth: 8,
   strokeStyle: 'black',
   radius: 40,
   centerPoint: { x: 330, y: 300 },
-  highlightStrokeStyle: 'gray'
+  highlight: {
+    strokeStyle: 'gray',
+    fillStyle: 'gray'
+  }
 })
 
 draggableCanvas.register(rect1)

@@ -67,6 +67,11 @@ export default class CircleShape extends Shape {
     return Maybe.None()
   }
 
+  calcHoverSlot(mousePoint: Point): Maybe<Shape> {
+    // TODO
+    return Maybe.None()
+  }
+
   getSelectedBorder(mousePoint: Point): Maybe<string> {
     // TODO
     return Maybe.None()
