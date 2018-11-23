@@ -25,6 +25,7 @@ class ShapeMirrorCanvas extends BaseCanvas {
   show(relativePoint: Point) {
     this.canvas.style.left = `${relativePoint.x}px`
     this.canvas.style.top = `${relativePoint.y}px`
+    this.canvas.style.opacity = '0.6'
     this.canvas.style.display = 'initial'
     this.draw()
   }
