@@ -9,7 +9,7 @@ import { Some, Maybe, None } from 'monet';
 export interface BaseCanvasOptions {
   width?: number,
   height?: number,
-  connetable?: boolean,
+  connectable?: boolean,
   hover?: boolean
 }
 
@@ -18,7 +18,7 @@ export interface BaseConvasMode {
 }
 
 export default abstract class BaseCanvas {
-  protected options?: BaseCanvasOptions
+  protected options: BaseCanvasOptions = {}
 
   protected mode: BaseConvasMode = {
     connecting: false
@@ -71,10 +71,11 @@ export default abstract class BaseCanvas {
   }
 
   constructor(canvas: HTMLCanvasElement | string, options?: BaseCanvasOptions) {
-    this.options = Object.assign({
-      connetable: true,
-      hover: true
-    }, options)
+    this.options = Object.assign(this.options, {
+      connectable: true,
+      hover: true,
+      ...options
+    })
 
     if (canvas instanceof HTMLCanvasElement) {
       this.canvas = canvas
@@ -95,22 +96,33 @@ export default abstract class BaseCanvas {
     }
 
     this.mouseenter$ = fromEvent<MouseEvent>(this.canvas, 'mouseenter')
+      .pipe(tap(this.onStart.bind(this)), publish(), refCount())
+
     this.mouseleave$ = fromEvent<MouseEvent>(this.canvas, 'mouseleave')
+      .pipe(tap(this.onEnd.bind(this)), publish(), refCount())
+
     this.mousedown$ = fromEvent<MouseEvent>(this.canvas, 'mousedown')
-      .pipe(tap(event => {
-        this.relativeMousePoint = this.getMousePoint(event)
-      }))
-      .pipe(publish(), refCount())
+      .pipe(
+        tap(event => {
+          this.relativeMousePoint = this.getMousePoint(event)
+        }),
+        publish(),
+        refCount())
+
     this.mousemove$ = fromEvent<MouseEvent>(this.canvas, 'mousemove')
-      .pipe(tap(event => {
-        this.relativeMousePoint = this.getMousePoint(event)
-      }))
-      .pipe(publish(), refCount())
+      .pipe(
+        tap(event => {
+          this.relativeMousePoint = this.getMousePoint(event)
+        }),
+        publish(),
+        refCount())
     this.mouseup$ = fromEvent<MouseEvent>(document, 'mouseup')
-      .pipe(tap(event => {
-        this.relativeMousePoint = this.getMousePoint(event)
-      }))
-      .pipe(publish(), refCount())
+      .pipe(
+        tap(event => {
+          this.relativeMousePoint = this.getMousePoint(event)
+        }),
+        publish(),
+        refCount())
 
     this.init(options)
   }
@@ -118,47 +130,6 @@ export default abstract class BaseCanvas {
   init(options: BaseCanvasOptions = {}) {
     this.width = options.width || this.canvas.width
     this.height = options.height || this.canvas.height
-
-    const drawTask$ = this.draw$.pipe(
-      bufferTime(50, null, 5),
-      filter(actions => actions.length > 0),
-      tap(actions => {
-        this.draw()
-      })
-    )
-    this.registerTask(Symbol('draw'), drawTask$)
-
-    if (safeProp(this.options, 'connetable')) {
-      const connectTask$ = this.mousedown$.pipe(
-        tap(event => this.startConnect(event)),
-        filter(() => !!this.mode.connecting),
-        switchMap(() => this.mousemove$.pipe(
-          takeUntil(this.mouseup$.pipe(
-            tap(event => this.endConnect(event))
-          ))
-        )),
-        tap(event => this.connect(event))
-      )
-      this.registerTask(Symbol('connect'), connectTask$)
-    }
-
-    if (safeProp(this.options, 'hover')) {
-      const hoverMaybeShape$ = this.mousemove$.pipe(
-        map(event => this.selectShape(this.relativeMousePoint)),
-      )
-      const [hoverShape$, hoverCanvas$] = partition<Maybe<Shape>>(shapeM => shapeM.isSome())(hoverMaybeShape$)
-
-      const hoverShapeTask$ = hoverShape$.pipe(
-        map(shapeM => shapeM.some()),
-        tap(this.hoverShape.bind(this))
-      )
-      this.registerTask(Symbol('hoverShape'), hoverShapeTask$)
-
-      const hoverCanvasTask$ = hoverCanvas$.pipe(
-        tap(this.hoverCanvas.bind(this))
-      )
-      this.registerTask(Symbol('hoverCanvas'), hoverCanvasTask$)
-    }
   }
 
   registerTask<T = any>(id: string | symbol, task: Observable<T>, override: boolean = false) {
@@ -182,6 +153,41 @@ export default abstract class BaseCanvas {
   }
 
   mount(): Subscription {
+    const drawTask$ = this.draw$.pipe(
+      bufferTime(50, null, 5),
+      filter(actions => actions.length > 0),
+      tap(actions => {
+        this.draw()
+      })
+    )
+    this.registerTask(Symbol('draw'), drawTask$)
+
+    if (safeProp(this.options, 'connectable')) {
+      const connectTask$ = this.mousedown$.pipe(
+        tap(event => this.startConnect(event)),
+        filter(() => !!this.mode.connecting),
+        switchMap(() => this.mousemove$.pipe(
+          takeUntil(this.mouseup$.pipe(
+            tap(event => this.endConnect(event)))))),
+        tap(event => this.connect(event)))
+      this.registerTask(Symbol('connect'), connectTask$)
+    }
+
+    if (safeProp(this.options, 'hover')) {
+      const hoverMaybeShape$ = this.mousemove$.pipe(
+        map(event => this.selectShape(this.relativeMousePoint)),)
+      const [hoverShape$, hoverCanvas$] = partition<Maybe<Shape>>(shapeM => shapeM.isSome())(hoverMaybeShape$)
+
+      const hoverShapeTask$ = hoverShape$.pipe(
+        map(shapeM => shapeM.some()),
+        tap(this.hoverShape.bind(this)))
+      this.registerTask(Symbol('hoverShape'), hoverShapeTask$)
+
+      const hoverCanvasTask$ = hoverCanvas$.pipe(
+        tap(this.hoverCanvas.bind(this)))
+      this.registerTask(Symbol('hoverCanvas'), hoverCanvasTask$)
+    }
+
     return this._mount()
   }
 
@@ -247,6 +253,10 @@ export default abstract class BaseCanvas {
 
     this.removeElement(this.shapes, shape)
   }
+
+  protected onStart(event: MouseEvent) { }
+
+  protected onEnd(event: MouseEvent) { }
 
   protected startConnect(event: MouseEvent): boolean {
     const shapeM = this.selectShape(this.relativeMousePoint)
@@ -390,14 +400,12 @@ export default abstract class BaseCanvas {
         catchError(err => {
           console.error(`task:${id} 中发生错误`)
           return EMPTY
-        })
-      )
+        }))
     })
 
     this.tasks$$ = this.mouseenter$.pipe(
       switchMap(() => merge(...tasks$).pipe(
-        takeUntil(this.mouseleave$)
-      ))
+        takeUntil(this.mouseleave$)))
     ).subscribe()
 
     return this.tasks$$

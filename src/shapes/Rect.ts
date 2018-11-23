@@ -68,6 +68,7 @@ export default class RectShape extends Shape {
 
   constructor(options: RectShapeOptions) {
     super(options)
+
     this.width = options.width
     this.offsetWidth = this.width + this.lineWidth
     this.contentWidth = this.width - this.lineWidth
@@ -76,7 +77,10 @@ export default class RectShape extends Shape {
     this.offsetHeight = this.height + this.lineWidth
     this.contentHeight = this.height - this.lineWidth
 
-    this.originPoint = options.originPoint
+    this.originPoint = {
+      x: options.originPoint.x,
+      y: options.originPoint.y
+    }
   }
 
   draw(ctx: CanvasRenderingContext2D, options?: RectShapeOptions) {
@@ -124,8 +128,8 @@ export default class RectShape extends Shape {
 
   calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint> {
     const borderDirectionM = this.getSelectedBorder(mousePoint)
-    
-    if(borderDirectionM.isNone()) return None()
+
+    if (borderDirectionM.isNone()) return None()
 
     switch (borderDirectionM.some()) {
       case RectBorderDirection.TOP:
@@ -142,7 +146,7 @@ export default class RectShape extends Shape {
   calcHoverSlot(mousePoint: Point): Maybe<Shape> {
     const borderDirectionM = this.getSelectedBorder(mousePoint)
 
-    if(borderDirectionM.isNone()) return None()
+    if (borderDirectionM.isNone()) return None()
 
     const baseOptions = {
       radius: 4,
@@ -173,7 +177,7 @@ export default class RectShape extends Shape {
         return None()
     }
 
-    if(this.getConnection(centerPoint).isNone()) return Maybe.of(new CircleShape({
+    if (this.getConnection(centerPoint).isNone()) return Maybe.of(new CircleShape({
       ...baseOptions,
       centerPoint
     }))
@@ -188,6 +192,10 @@ export default class RectShape extends Shape {
     if (this.isSelectLeftTri(mousePoint)) return Maybe.of(RectBorderDirection.LEFT)
 
     return Maybe.None()
+  }
+
+  clone(): RectShape {
+    return new RectShape(this.options as RectShapeOptions)
   }
 
   private connectionPointFactory(connectionPoint: Point): ConnectionPoint {

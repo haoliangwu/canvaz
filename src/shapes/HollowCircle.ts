@@ -23,4 +23,8 @@ export default class HollowCircleShape extends CircleShape {
     this.fillBorderColor(ctx, options)
     ctx.restore()
   }
+
+  clone(): HollowCircleShape {
+    return new HollowCircleShape(this.options as HollowCircleShapeOptions)
+  }
 }

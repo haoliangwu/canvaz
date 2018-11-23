@@ -44,7 +44,7 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   protected lineWidth: number
   protected halfLineWidth: number
 
-  private options?: ShapeBaseOptions
+  protected options: ShapeBaseOptions = {}
 
   protected hoverSlot?: Shape
 
@@ -79,7 +79,7 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   }
 
   constructor(options: ShapeBaseOptions) {
-    this.options = options
+    this.options = Object.assign(this.options, options)
 
     this.fillStyle = options.fillStyle || ''
     this.strokeStyle = options.strokeStyle || ''
@@ -96,6 +96,7 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   abstract calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint>
   abstract calcHoverSlot(mousePoint: Point): Maybe<Shape>
   abstract getSelectedBorder(mousePoint: Point): Maybe<string>
+  abstract clone(): Shape
 
   highlight(): void {
     this.mode.highlighted = true

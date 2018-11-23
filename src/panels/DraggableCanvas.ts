@@ -3,7 +3,9 @@ import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/BaseCanva
 import { filter, tap, switchMap, takeUntil } from "rxjs/operators";
 import { safeProp } from "@utils/index";
 
-export interface DraggableCanvasOptions extends BaseCanvasOptions { }
+export interface DraggableCanvasOptions extends BaseCanvasOptions {
+  draggable: boolean
+}
 
 export interface DraggableConvasMode extends BaseConvasMode {
   dragging?: boolean
@@ -18,11 +20,10 @@ export default class DraggableCanvas extends BaseCanvas {
   protected dragShape?: Shape
 
   constructor(canvas: HTMLCanvasElement, options?: DraggableCanvasOptions) {
-    super(canvas, options)
-
-    this.options = Object.assign({
-      draggable: true
-    }, options)
+    super(canvas, Object.assign({}, options, {
+      draggable: true,
+      ...options
+    }))
   }
 
   mount() {

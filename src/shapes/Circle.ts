@@ -17,7 +17,10 @@ export default class CircleShape extends Shape {
     super(options)
 
     this.radius = options.radius
-    this.centerPoint = options.centerPoint
+    this.centerPoint = {
+      x: options.centerPoint.x,
+      y: options.centerPoint.y
+    }
   }
 
   draw(ctx: CanvasRenderingContext2D, options?: CircleShapeOptions | undefined): void {
@@ -37,8 +40,8 @@ export default class CircleShape extends Shape {
 
         cp = this.syncConnectionPoint(cp)
 
-        if(l.head == this) options.startPoint = cp
-        if(l.tail == this) options.endPoint = cp
+        if (l.head == this) options.startPoint = cp
+        if (l.tail == this) options.endPoint = cp
 
         l.update(options)
       })
@@ -75,6 +78,10 @@ export default class CircleShape extends Shape {
   getSelectedBorder(mousePoint: Point): Maybe<string> {
     // TODO
     return Maybe.None()
+  }
+
+  clone(): CircleShape {
+    return new CircleShape(this.options as CircleShapeOptions)
   }
 
   protected drawCircelPath(ctx: CanvasRenderingContext2D) {
