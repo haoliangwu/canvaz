@@ -1,6 +1,6 @@
 import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
-import { arrayRemove, isSameReference, noopMouseEventHandler } from "@utils/index";
+import { arrayRemove, isSameReference, noopMouseEventHandler, safeProp } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
 import { Observable, fromEvent, Subscription, of, Subject, EMPTY, merge } from 'rxjs';
 import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, partition, catchError } from 'rxjs/operators';
@@ -9,16 +9,17 @@ import { Some, Maybe, None } from 'monet';
 export interface BaseCanvasOptions {
   width?: number,
   height?: number,
-  onMouseDown?: (event: MouseEvent) => void
-  onMouseMove?: (event: MouseEvent) => void
-  onMouseUp?: (event: MouseEvent) => void
+  connetable?: boolean,
+  hover?: boolean
 }
 
 export interface BaseConvasMode {
-  connecting: boolean
+  connecting?: boolean
 }
 
 export default abstract class BaseCanvas {
+  protected options?: BaseCanvasOptions
+
   protected mode: BaseConvasMode = {
     connecting: false
   }
@@ -70,6 +71,11 @@ export default abstract class BaseCanvas {
   }
 
   constructor(canvas: HTMLCanvasElement | string, options?: BaseCanvasOptions) {
+    this.options = Object.assign({
+      connetable: true,
+      hover: true
+    }, options)
+
     if (canvas instanceof HTMLCanvasElement) {
       this.canvas = canvas
     } else {
@@ -122,33 +128,37 @@ export default abstract class BaseCanvas {
     )
     this.registerTask(Symbol('draw'), drawTask$)
 
-    const connectTask$ = this.mousedown$.pipe(
-      tap(event => this.startConnect(event)),
-      filter(() => this.mode.connecting),
-      switchMap(() => this.mousemove$.pipe(
-        takeUntil(this.mouseup$.pipe(
-          tap(event => this.endConnect(event))
-        ))
-      )),
-      tap(event => this.connect(event))
-    )
-    this.registerTask(Symbol('connect'), connectTask$)
+    if (safeProp(this.options, 'connetable')) {
+      const connectTask$ = this.mousedown$.pipe(
+        tap(event => this.startConnect(event)),
+        filter(() => !!this.mode.connecting),
+        switchMap(() => this.mousemove$.pipe(
+          takeUntil(this.mouseup$.pipe(
+            tap(event => this.endConnect(event))
+          ))
+        )),
+        tap(event => this.connect(event))
+      )
+      this.registerTask(Symbol('connect'), connectTask$)
+    }
 
-    const hoverMaybeShape$ = this.mousemove$.pipe(
-      map(event => this.selectShape(this.relativeMousePoint)),
-    )
-    const [hoverShape$, hoverCanvas$] = partition<Maybe<Shape>>(shapeM => shapeM.isSome())(hoverMaybeShape$)
+    if (safeProp(this.options, 'hover')) {
+      const hoverMaybeShape$ = this.mousemove$.pipe(
+        map(event => this.selectShape(this.relativeMousePoint)),
+      )
+      const [hoverShape$, hoverCanvas$] = partition<Maybe<Shape>>(shapeM => shapeM.isSome())(hoverMaybeShape$)
 
-    const hoverShapeTask$ = hoverShape$.pipe(
-      map(shapeM => shapeM.some()),
-      tap(this.hoverShape.bind(this))
-    )
-    this.registerTask(Symbol('hoverShape'), hoverShapeTask$)
+      const hoverShapeTask$ = hoverShape$.pipe(
+        map(shapeM => shapeM.some()),
+        tap(this.hoverShape.bind(this))
+      )
+      this.registerTask(Symbol('hoverShape'), hoverShapeTask$)
 
-    const hoverCanvasTask$ = hoverCanvas$.pipe(
-      tap(this.hoverCanvas.bind(this))
-    )
-    this.registerTask(Symbol('hoverCanvas'), hoverCanvasTask$)
+      const hoverCanvasTask$ = hoverCanvas$.pipe(
+        tap(this.hoverCanvas.bind(this))
+      )
+      this.registerTask(Symbol('hoverCanvas'), hoverCanvasTask$)
+    }
   }
 
   registerTask<T = any>(id: string | symbol, task: Observable<T>, override: boolean = false) {

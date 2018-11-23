@@ -52,3 +52,7 @@ export function isSameReference(ob1: any, ob2: any) {
 export function isSamePoint(p1: Point, p2: Point) {
   return isSameReference(p1, p2) || (p1.x === p2.x && p1.y === p2.y)
 }
+
+export function safeProp<T = any>(obj: any, prop: string): T {
+  return obj && obj[prop]
+}

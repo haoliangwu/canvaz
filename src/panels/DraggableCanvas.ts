@@ -1,20 +1,16 @@
 import Shape from "@shapes/Shape";
-import Line from "@lines/Line";
-import StraightLine from "@lines/StraightLine";
-import { arrayRemove, isSameReference } from "@utils/index";
 import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/BaseCanvas";
-import { of, iif, Observable, Subscription } from "rxjs";
 import { filter, tap, switchMap, takeUntil } from "rxjs/operators";
+import { safeProp } from "@utils/index";
 
 export interface DraggableCanvasOptions extends BaseCanvasOptions { }
 
-export interface DraggableConvasMode extends BaseConvasMode{
-  dragging: boolean
+export interface DraggableConvasMode extends BaseConvasMode {
+  dragging?: boolean
 }
 
 export default class DraggableCanvas extends BaseCanvas {
   protected mode: DraggableConvasMode = {
-    connecting: false,
     dragging: false
   }
 
@@ -23,21 +19,27 @@ export default class DraggableCanvas extends BaseCanvas {
 
   constructor(canvas: HTMLCanvasElement, options?: DraggableCanvasOptions) {
     super(canvas, options)
+
+    this.options = Object.assign({
+      draggable: true
+    }, options)
   }
 
   mount() {
-    const dragTask$ = this.mousedown$.pipe(
-      filter(event => !this.mode.connecting),
-      tap(event => this.startDrag(event)),
-      switchMap(() => this.mousemove$.pipe(
-        takeUntil(this.mouseup$.pipe(
-          tap(event => this.endDrag(event))
-        ))
-      )),
-      tap(event => this.drag(event))
-    )
+    if (safeProp(this.options, 'draggable')) {
+      const dragTask$ = this.mousedown$.pipe(
+        filter(event => !this.mode.connecting),
+        tap(event => this.startDrag(event)),
+        switchMap(() => this.mousemove$.pipe(
+          takeUntil(this.mouseup$.pipe(
+            tap(event => this.endDrag(event))
+          ))
+        )),
+        tap(event => this.drag(event))
+      )
 
-    this.registerTask(Symbol('drag'), dragTask$)
+      this.registerTask(Symbol('drag'), dragTask$)
+    }
 
     return super.mount()
   }
