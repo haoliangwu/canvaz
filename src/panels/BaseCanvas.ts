@@ -1,6 +1,6 @@
 import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
-import { arrayRemove, isSameReference, noopMouseEventHandler, safeProp } from "@utils/index";
+import { arrayRemove, isSameReference, noopMouseEventHandler, safeProp, isInRectRange } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
 import { Observable, fromEvent, Subscription, of, Subject, EMPTY, merge } from 'rxjs';
 import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, partition, catchError } from 'rxjs/operators';
@@ -52,10 +52,10 @@ export default abstract class BaseCanvas {
   protected tasks: Map<string | symbol, Observable<any>> = new Map()
   protected tasks$$?: Subscription
 
-  protected set relativeMousePoint(val: Point) {
+  set relativeMousePoint(val: Point) {
     this.mousePoint = val
   }
-  protected get relativeMousePoint(): Point {
+  get relativeMousePoint(): Point {
     return {
       x: this.mousePoint.x - this.originPoint.x,
       y: this.mousePoint.y - this.originPoint.y
@@ -109,7 +109,7 @@ export default abstract class BaseCanvas {
         publish(),
         refCount())
 
-    this.mousemove$ = fromEvent<MouseEvent>(this.canvas, 'mousemove')
+    this.mousemove$ = fromEvent<MouseEvent>(document, 'mousemove')
       .pipe(
         tap(event => {
           this.relativeMousePoint = this.getMousePoint(event)
@@ -130,6 +130,9 @@ export default abstract class BaseCanvas {
   init(options: BaseCanvasOptions = {}) {
     this.width = options.width || this.canvas.width
     this.height = options.height || this.canvas.height
+
+    this.canvas.width = this.width
+    this.canvas.height = this.height
   }
 
   registerTask<T = any>(id: string | symbol, task: Observable<T>, override: boolean = false) {
@@ -144,9 +147,7 @@ export default abstract class BaseCanvas {
     if (this.tasks.has(id)) {
       this.tasks.delete(id)
 
-      if (this.tasks$$) {
-        this.tasks$$.unsubscribe()
-      }
+      this.unmount()
     }
 
     this._mount()
@@ -175,7 +176,7 @@ export default abstract class BaseCanvas {
 
     if (safeProp(this.options, 'hover')) {
       const hoverMaybeShape$ = this.mousemove$.pipe(
-        map(event => this.selectShape(this.relativeMousePoint)),)
+        map(event => this.selectShape(this.relativeMousePoint)), )
       const [hoverShape$, hoverCanvas$] = partition<Maybe<Shape>>(shapeM => shapeM.isSome())(hoverMaybeShape$)
 
       const hoverShapeTask$ = hoverShape$.pipe(
@@ -189,6 +190,10 @@ export default abstract class BaseCanvas {
     }
 
     return this._mount()
+  }
+
+  unmount() {
+    if (this.tasks$$) this.tasks$$.unsubscribe()
   }
 
   registerShape(shape: Shape | Line) {
@@ -252,6 +257,10 @@ export default abstract class BaseCanvas {
     if (!shape) return
 
     this.removeElement(this.shapes, shape)
+  }
+
+  isPointVisible(): boolean {
+    return isInRectRange(this.relativeMousePoint, { x: 0, y: 0 }, this.width, this.height)
   }
 
   protected onStart(event: MouseEvent) { }

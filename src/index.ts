@@ -8,7 +8,9 @@ const $canvas = document.querySelector('#canvas') as HTMLCanvasElement
 const $picker = document.querySelector('#picker') as HTMLCanvasElement
 
 const draggableCanvas = new DraggableCanvas($canvas)
-const pickerCanvas = new ShapePickerCanvas($picker)
+const pickerCanvas = new ShapePickerCanvas($picker, {
+  target: draggableCanvas
+})
 
 const rect1 = new RectShape({
   fillStyle: 'yellow',

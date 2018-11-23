@@ -98,6 +98,13 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   abstract getSelectedBorder(mousePoint: Point): Maybe<string>
   abstract clone(): Shape
 
+  update(options: Partial<ShapeBaseOptions>): void {
+    this.fillStyle = options.fillStyle || this.fillStyle
+    this.strokeStyle = options.strokeStyle || this.strokeStyle
+    this.lineWidth = options.lineWidth || this.lineWidth
+    this.halfLineWidth = this.lineWidth / 2
+  }
+
   highlight(): void {
     this.mode.highlighted = true
   }
