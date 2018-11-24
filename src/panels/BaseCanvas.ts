@@ -2,7 +2,7 @@ import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler, safeProp, isInRectRange } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
-import { Observable, fromEvent, Subscription, of, Subject, EMPTY, merge } from 'rxjs';
+import { Observable, fromEvent, Subscription, of, Subject, EMPTY, merge, pipe } from 'rxjs';
 import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, partition, catchError } from 'rxjs/operators';
 import { Some, Maybe, None } from 'monet';
 
@@ -95,34 +95,25 @@ export default abstract class BaseCanvas {
       y: top + window.pageYOffset,
     }
 
+    const multicastMouseEvent = pipe(publish<MouseEvent>(), refCount())
+    const setRelativeMousePoint = tap<MouseEvent>(event => {
+      this.relativeMousePoint = this.getMousePoint(event)
+    })
+
     this.mouseenter$ = fromEvent<MouseEvent>(this.canvas, 'mouseenter')
-      .pipe(tap(this.onStart.bind(this)), publish(), refCount())
+      .pipe(tap(this.onStart.bind(this)), multicastMouseEvent)
 
     this.mouseleave$ = fromEvent<MouseEvent>(this.canvas, 'mouseleave')
-      .pipe(tap(this.onEnd.bind(this)), publish(), refCount())
+      .pipe(tap(this.onEnd.bind(this)), multicastMouseEvent)
 
     this.mousedown$ = fromEvent<MouseEvent>(this.canvas, 'mousedown')
-      .pipe(
-        tap(event => {
-          this.relativeMousePoint = this.getMousePoint(event)
-        }),
-        publish(),
-        refCount())
+      .pipe(setRelativeMousePoint, multicastMouseEvent)
 
     this.mousemove$ = fromEvent<MouseEvent>(document, 'mousemove')
-      .pipe(
-        tap(event => {
-          this.relativeMousePoint = this.getMousePoint(event)
-        }),
-        publish(),
-        refCount())
+      .pipe(setRelativeMousePoint, multicastMouseEvent)
+
     this.mouseup$ = fromEvent<MouseEvent>(document, 'mouseup')
-      .pipe(
-        tap(event => {
-          this.relativeMousePoint = this.getMousePoint(event)
-        }),
-        publish(),
-        refCount())
+      .pipe(setRelativeMousePoint, multicastMouseEvent)
 
     this.init(options)
   }
