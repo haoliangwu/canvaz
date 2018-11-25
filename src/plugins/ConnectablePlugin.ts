@@ -8,7 +8,6 @@ import StraightConnectionLine from "@lines/StraightConnectionLine";
 import { Subscription, combineLatest } from "rxjs";
 
 export interface ConnectablePluginOptions extends BasePluginOptions {
-
 }
 
 export default class ConnectablePlugin extends BasePlugin {

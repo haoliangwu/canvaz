@@ -7,9 +7,7 @@ import { DraggableConvasMode } from "@panels/DraggableCanvas";
 import { Subscription, combineLatest } from "rxjs";
 
 export interface DraggablePluginOptions extends BasePluginOptions {
-  draggable?: boolean
 }
-
 
 export default class DraggablePlugin extends BasePlugin {
   id = 'draggable'

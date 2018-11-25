@@ -3,11 +3,10 @@ import BaseCanvas from "@panels/BaseCanvas";
 import Shape from "@shapes/Shape";
 import { isSameReference } from "@utils/index";
 import { Maybe } from "monet";
-import { partition, map, tap } from "rxjs/operators";
+import { partition, map, tap, filter } from "rxjs/operators";
 import { Subscription, merge } from "rxjs";
 
 export interface HoverPluginOptions extends BasePluginOptions {
-
 }
 
 export default class HoverPlugin extends BasePlugin {
@@ -22,6 +21,7 @@ export default class HoverPlugin extends BasePlugin {
 
   mount(panel: BaseCanvas) {
     const hoverMaybeShape$ = panel.mousemove$.pipe(
+      filter(() => !panel.mode.dragging),
       map(event => panel.selectShape(panel.relativeMousePoint)), )
     const [hoverShape$, hoverCanvas$] = partition<Maybe<Shape>>(shapeM => shapeM.isSome())(hoverMaybeShape$)
 
@@ -38,7 +38,7 @@ export default class HoverPlugin extends BasePlugin {
   }
 
   unmount(panel: BaseCanvas) {
-    if(this.hover$$) this.hover$$.unsubscribe()
+    if (this.hover$$) this.hover$$.unsubscribe()
 
     super.unmount(panel)
   }

@@ -14,7 +14,7 @@ export interface BaseCanvasOptions {
 }
 
 export interface BaseConvasMode {
-  connecting?: boolean
+  [mode: string]: any
 }
 
 export default abstract class BaseCanvas {
@@ -34,9 +34,7 @@ export default abstract class BaseCanvas {
 
   draw$ = new Subject<any>()
 
-  mode: BaseConvasMode = {
-    connecting: false
-  }
+  mode: BaseConvasMode = {}
 
   mouseenter$: Observable<MouseEvent>
   mouseleave$: Observable<MouseEvent>
