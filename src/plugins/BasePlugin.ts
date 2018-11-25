@@ -1,8 +1,6 @@
 import BaseCanvas from "@panels/BaseCanvas";
 
-export interface BasePluginOptions {
-
-}
+export interface BasePluginOptions {}
 
 export default abstract class BasePlugin {
   abstract id: string | symbol

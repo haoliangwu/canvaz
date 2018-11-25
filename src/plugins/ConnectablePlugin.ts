@@ -5,7 +5,7 @@ import Line from "@lines/Line";
 import Shape from "@shapes/Shape";
 import { isSameReference } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
-import { Subscription } from "rxjs";
+import { Subscription, combineLatest } from "rxjs";
 
 export interface ConnectablePluginOptions extends BasePluginOptions {
 
@@ -25,9 +25,7 @@ export default class ConnectablePlugin extends BasePlugin {
 
   mount(panel: BaseCanvas) {
     this.connect$$ = panel.mousedown$.pipe(
-      tap(event => {
-        this.startConnect(event)
-      }),
+      tap(event => this.startConnect(event)),
       filter(() => !!panel.mode.connecting),
       switchMap(() => panel.mousemove$.pipe(
         takeUntil(panel.mouseup$.pipe(
@@ -69,8 +67,7 @@ export default class ConnectablePlugin extends BasePlugin {
 
       shape.registerConnectionPoint(this.connection, startPoint)
       this.panel.registerElement(this.connection)
-
-      this.panel.mode.connecting = true
+      this.panel.changeMode({ connecting: true })
 
       return true
     }
@@ -145,7 +142,7 @@ export default class ConnectablePlugin extends BasePlugin {
 
     this.connection = undefined
     this.connectionStartShape = undefined
-    this.panel.mode.connecting = false
+    this.panel.changeMode({ connecting: false })
 
     return connected
   }

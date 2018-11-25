@@ -2,7 +2,7 @@ import Shape from "@shapes/Shape";
 import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/BaseCanvas";
 import { filter, tap, switchMap, takeUntil, throttleTime } from "rxjs/operators";
 import { isSameReference } from "@utils/index";
-import { Subscription, Subject } from "rxjs";
+import { Subscription, Subject, BehaviorSubject } from "rxjs";
 
 export interface ShapePickerCanvasOptions extends BaseCanvasOptions {
   target?: BaseCanvas
@@ -57,11 +57,7 @@ export default class ShapePickerCanvas extends BaseCanvas {
   pickedShape$ = new Subject<Shape>()
 
   constructor(canvas: HTMLCanvasElement, options: ShapePickerCanvasOptions = {}) {
-    super(canvas, Object.assign({}, options, {
-      hover: false,
-      connectable: false,
-      ...options
-    }))
+    super(canvas, options)
 
     this.target = options.target
 
@@ -104,7 +100,6 @@ export default class ShapePickerCanvas extends BaseCanvas {
       tap(event => this.pick(event))
     ).subscribe()
 
-
     return super.mount()
   }
 
@@ -135,7 +130,9 @@ export default class ShapePickerCanvas extends BaseCanvas {
         y: this.originPoint.y
       })
 
-      this.mode.picking = true
+      this.changeMode<ShapePickerConvasMode>({
+        picking: true
+      })
     }
   }
 
@@ -172,7 +169,9 @@ export default class ShapePickerCanvas extends BaseCanvas {
     }
 
     this.mirrorShape = undefined
-    this.mode.picking = false
+    this.changeMode<ShapePickerConvasMode>({
+      picking: false
+    })
 
     this.mirror.hide()
   }

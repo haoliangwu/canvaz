@@ -5,7 +5,6 @@ import HollowCircleShape from "@shapes/HollowCircle";
 import ShapePickerCanvas from "@panels/ShapePickerCanvas";
 import ConnectablePlugin from "@plugins/ConnectablePlugin";
 import HoverPlugin from "@plugins/HoverPlugin";
-import DraggablePlugin from "@plugins/DraggablePlugin";
 
 const $canvas = document.querySelector('#canvas') as HTMLCanvasElement
 const $picker = document.querySelector('#picker') as HTMLCanvasElement
@@ -14,7 +13,6 @@ const draggableCanvas = new DraggableCanvas($canvas, {
   plugins: [
     new HoverPlugin(),
     new ConnectablePlugin(),
-    new DraggablePlugin()
   ]
 })
 const pickerCanvas = new ShapePickerCanvas($picker, {

@@ -1,4 +1,6 @@
 import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/BaseCanvas";
+import { BehaviorSubject } from "rxjs";
+import DraggablePlugin from "@plugins/DraggablePlugin";
 
 export interface DraggableCanvasOptions extends BaseCanvasOptions {
 }
@@ -13,8 +15,9 @@ export default class DraggableCanvas extends BaseCanvas {
   }
 
   constructor(canvas: HTMLCanvasElement, options?: DraggableCanvasOptions) {
-    super(canvas, Object.assign({}, options, {
-      ...options
-    }))
+    super(canvas, options)
+
+    const draggablePlugin = new DraggablePlugin()
+    this.registerPlugin(draggablePlugin.id, draggablePlugin)
   }
 }

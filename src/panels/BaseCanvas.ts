@@ -2,7 +2,7 @@ import Shape from "@shapes/Shape";
 import Line from "@lines/Line";
 import { arrayRemove, isSameReference, noopMouseEventHandler, safeProp, isInRectRange } from "@utils/index";
 import StraightConnectionLine from "@lines/StraightConnectionLine";
-import { Observable, fromEvent, Subscription, of, Subject, EMPTY, merge, pipe } from 'rxjs';
+import { Observable, fromEvent, Subscription, of, Subject, EMPTY, merge, pipe, BehaviorSubject } from 'rxjs';
 import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, partition, catchError } from 'rxjs/operators';
 import { Some, Maybe, None } from 'monet';
 import BasePlugin from "plugins/BasePlugin";
@@ -10,8 +10,6 @@ import BasePlugin from "plugins/BasePlugin";
 export interface BaseCanvasOptions {
   width?: number,
   height?: number,
-  connectable?: boolean,
-  hover?: boolean
   plugins?: BasePlugin[]
 }
 
@@ -21,10 +19,6 @@ export interface BaseConvasMode {
 
 export default abstract class BaseCanvas {
   options: BaseCanvasOptions = {}
-
-  mode: BaseConvasMode = {
-    connecting: false
-  }
 
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
@@ -38,7 +32,11 @@ export default abstract class BaseCanvas {
 
   mousePoint: Point = { x: 0, y: 0 }
 
-  draw$: Subject<any> = new Subject()
+  draw$ = new Subject<any>()
+
+  mode: BaseConvasMode = {
+    connecting: false
+  }
 
   mouseenter$: Observable<MouseEvent>
   mouseleave$: Observable<MouseEvent>
@@ -70,11 +68,7 @@ export default abstract class BaseCanvas {
   }
 
   constructor(canvas: HTMLCanvasElement | string, options?: BaseCanvasOptions) {
-    this.options = Object.assign(this.options, {
-      connectable: true,
-      hover: true,
-      ...options
-    })
+    this.options = Object.assign(this.options, options)
 
     if (canvas instanceof HTMLCanvasElement) {
       this.canvas = canvas
@@ -129,6 +123,30 @@ export default abstract class BaseCanvas {
     plugins.forEach(plugin => this.registerPlugin(plugin.id, plugin))
   }
 
+  mount(): Subscription {
+    for (let [id, plugin] of this.plugins.entries()) {
+      plugin.mount(this)
+    }
+
+    const drawTask$ = this.draw$.pipe(
+      bufferTime(50, null, 5),
+      filter(actions => actions.length > 0),
+      tap(() => this.draw())
+    )
+
+    this.registerTask(Symbol('draw'), drawTask$)
+
+    return this._mount()
+  }
+
+  unmount() {
+    for (let [id, plugin] of this.plugins.entries()) {
+      plugin.unmount(this)
+    }
+
+    if (this.tasks$$) this.tasks$$.unsubscribe()
+  }
+
   registerPlugin(id: string | symbol, plugin: BasePlugin, override: boolean = false) {
     if (this.plugins.has(id) && !override) {
       if (override) {
@@ -151,7 +169,7 @@ export default abstract class BaseCanvas {
 
   registerTask<T = any>(id: string | symbol, task: Observable<T>, override: boolean = false) {
     if (this.tasks.has(id) && !override) {
-      return console.error(`task:${id} 已被注册. 请使用其他 task 名称或使用 override = true`)
+      return console.error(`task:${id} 已被注册. 请使用其他名称或设置 override = true`)
     }
 
     this.tasks.set(id, task)
@@ -165,31 +183,6 @@ export default abstract class BaseCanvas {
     }
 
     this._mount()
-  }
-
-  mount(): Subscription {
-    for (let [id, plugin] of this.plugins.entries()) {
-      plugin.mount(this)
-    }
-
-    const drawTask$ = this.draw$.pipe(
-      bufferTime(50, null, 5),
-      filter(actions => actions.length > 0),
-      tap(actions => {
-        this.draw()
-      })
-    )
-    this.registerTask(Symbol('draw'), drawTask$)
-
-    return this._mount()
-  }
-
-  unmount() {
-    for (let [id, plugin] of this.plugins.entries()) {
-      plugin.unmount(this)
-    }
-
-    if (this.tasks$$) this.tasks$$.unsubscribe()
   }
 
   registerElement(shape: Shape | Line) {
@@ -276,6 +269,10 @@ export default abstract class BaseCanvas {
   getMousePoint(event: MouseEvent): Point {
     const { clientX, clientY } = event
     return { x: clientX, y: clientY }
+  }
+
+  changeMode<M extends BaseConvasMode>(mode: M) {
+    this.mode = Object.assign(this.mode, mode)
   }
 
   private _mount() {

@@ -3,8 +3,8 @@ import { filter, tap, switchMap, takeUntil } from "rxjs/operators";
 import { safeProp } from "@utils/index";
 import BasePlugin, { BasePluginOptions } from "@plugins/BasePlugin";
 import BaseCanvas from "@panels/BaseCanvas";
-import DraggableCanvas from "@panels/DraggableCanvas";
-import { Subscription } from "rxjs";
+import { DraggableConvasMode } from "@panels/DraggableCanvas";
+import { Subscription, combineLatest } from "rxjs";
 
 export interface DraggablePluginOptions extends BasePluginOptions {
   draggable?: boolean
@@ -14,7 +14,7 @@ export interface DraggablePluginOptions extends BasePluginOptions {
 export default class DraggablePlugin extends BasePlugin {
   id = 'draggable'
 
-  panel?: DraggableCanvas
+  panel?: BaseCanvas
   dragStartPoint?: Point
   dragShape?: Shape
 
@@ -24,9 +24,9 @@ export default class DraggablePlugin extends BasePlugin {
     super(options)
   }
 
-  mount(panel: DraggableCanvas) {
+  mount(panel: BaseCanvas) {
     this.drag$$ = panel.mousedown$.pipe(
-      filter(event => !panel.mode.connecting),
+      filter(() => !panel.mode.connecting),
       tap(event => this.startDrag(event)),
       switchMap(() => panel.mousemove$.pipe(
         takeUntil(panel.mouseup$.pipe(
@@ -39,7 +39,7 @@ export default class DraggablePlugin extends BasePlugin {
     return super.mount(panel)
   }
 
-  unmount(panel: DraggableCanvas) {
+  unmount(panel: BaseCanvas) {
     if (this.drag$$) this.drag$$.unsubscribe()
 
     super.mount(panel)
@@ -59,7 +59,9 @@ export default class DraggablePlugin extends BasePlugin {
       this.dragShape = shape
 
       shape.setOffset(this.panel.relativeMousePoint)
-      this.panel.mode.dragging = true
+      this.panel.changeMode<DraggableConvasMode>({
+        dragging: true
+      })
     }
   }
 
@@ -73,7 +75,11 @@ export default class DraggablePlugin extends BasePlugin {
   endDrag(event: MouseEvent): void {
     this.dragStartPoint = undefined
     this.dragShape = undefined
-    
-    if(this.panel) this.panel.mode.dragging = false
+
+    if (this.panel) {
+      this.panel.changeMode<DraggableConvasMode>({
+        dragging: false
+      })
+    }
   }
 }
