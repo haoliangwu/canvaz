@@ -8,5 +8,6 @@ module.exports = {
     "^@shapes/(.*)$": "<rootDir>/src/shapes/$1",
     "^@panels/(.*)$": "<rootDir>/src/panels/$1",
     "^@utils/(.*)$": "<rootDir>/src/utils/$1",
+    "^@plugins/(.*)$": "<rootDir>/src/plugins/$1",
   }
 };

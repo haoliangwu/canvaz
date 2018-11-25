@@ -41,20 +41,20 @@ class ShapeMirrorCanvas extends BaseCanvas {
 }
 
 export default class ShapePickerCanvas extends BaseCanvas {
-  protected mode: ShapePickerConvasMode = {
+  mode: ShapePickerConvasMode = {
     picking: false
   }
 
-  protected target?: BaseCanvas
+  target?: BaseCanvas
 
-  protected mirror: ShapeMirrorCanvas
-  protected mirrorShape?: Shape
+  mirror: ShapeMirrorCanvas
+  mirrorShape?: Shape
 
-  protected originPoint: Point
-  protected offsetPoint: Point = { x: 0, y: 0 }
+  originPoint: Point
+  offsetPoint: Point = { x: 0, y: 0 }
 
-  protected mirror$$?: Subscription
-  protected pickedShape$ = new Subject<Shape>()
+  mirror$$?: Subscription
+  pickedShape$ = new Subject<Shape>()
 
   constructor(canvas: HTMLCanvasElement, options: ShapePickerCanvasOptions = {}) {
     super(canvas, Object.assign({}, options, {
@@ -114,7 +114,7 @@ export default class ShapePickerCanvas extends BaseCanvas {
     return super.unmount()
   }
 
-  protected startPick(event: MouseEvent): void {
+  startPick(event: MouseEvent): void {
     const shapeM = this.selectShape(this.relativeMousePoint)
 
     if (shapeM.isNone()) return
@@ -126,7 +126,7 @@ export default class ShapePickerCanvas extends BaseCanvas {
       this.mirrorShape = shape.clone()
 
       this.mirrorShape.setOffset(this.relativeMousePoint)
-      this.mirror.registerShape(this.mirrorShape)
+      this.mirror.registerElement(this.mirrorShape)
 
       this.offsetPoint = mousePoint
 
@@ -139,7 +139,7 @@ export default class ShapePickerCanvas extends BaseCanvas {
     }
   }
 
-  protected pick(event: MouseEvent): void {
+  pick(event: MouseEvent): void {
     if (!this.mirrorShape) return
 
     this.draw()
@@ -152,20 +152,20 @@ export default class ShapePickerCanvas extends BaseCanvas {
     })
   }
 
-  protected endPick(event: MouseEvent): void {
+  endPick(event: MouseEvent): void {
     const mousePoint = this.getMousePoint(event)
 
     if (this.mirrorShape) {
-      this.mirror.unregisterShape(this.mirrorShape)
+      this.mirror.unregisterElement(this.mirrorShape)
       this.pickedShape$.next(this.mirrorShape)
-      
-      if(this.target) {
+
+      if (this.target) {
         this.target.relativeMousePoint = mousePoint
 
-        if(this.target.isPointVisible()) {
+        if (this.target.isPointVisible()) {
           this.mirrorShape.move(this.target.relativeMousePoint)
-          
-          this.target.registerShape(this.mirrorShape)
+
+          this.target.registerElement(this.mirrorShape)
           this.target.draw()
         }
       }

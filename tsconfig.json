@@ -15,7 +15,8 @@
       "@lines/*": ["lines/*"],
       "@shapes/*": ["shapes/*"],
       "@panels/*": ["panels/*"],
-      "@utils/*": ["utils/*"]
+      "@utils/*": ["utils/*"],
+      "@plugins/*": ["plugins/*"]
     },                           
     "esModuleInterop": true,                   
   },
