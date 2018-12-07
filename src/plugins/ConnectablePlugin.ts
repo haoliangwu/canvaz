@@ -38,7 +38,7 @@ export default class ConnectablePlugin extends BasePlugin {
   unmount(panel: BaseCanvas) {
     if (this.connect$$) this.connect$$.unsubscribe()
 
-    super.mount(panel)
+    super.unmount(panel)
   }
 
   startConnect(event: MouseEvent): boolean {

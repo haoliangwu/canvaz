@@ -147,14 +147,9 @@ export default abstract class BaseCanvas {
 
   registerPlugin(id: string | symbol, plugin: BasePlugin, override: boolean = false) {
     if (this.plugins.has(id) && !override) {
-      if (override) {
-        (this.plugins.get(id) as BasePlugin).unmount(this)
-      } else {
-        return console.error(`plugin:${id} 已被注册. 请使用其他名称或设置 override = true`)
-      }
+      return console.error(`plugin:${id} 已被注册. 请使用其他名称或设置 override = true`)
     }
 
-    plugin.mount(this)
     this.plugins.set(id, plugin)
   }
 
