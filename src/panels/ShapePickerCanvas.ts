@@ -1,5 +1,5 @@
 import Shape from "@shapes/Shape";
-import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/BaseCanvas";
+import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/internal/BaseCanvas";
 import { filter, tap, switchMap, takeUntil, throttleTime } from "rxjs/operators";
 import { isSameReference } from "@utils/index";
 import { Subscription, Subject, BehaviorSubject } from "rxjs";

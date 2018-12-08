@@ -1,5 +1,5 @@
 import BasePlugin, { BasePluginOptions } from "@plugins/BasePlugin";
-import BaseCanvas from "@panels/BaseCanvas";
+import BaseCanvas from "@panels/internal/BaseCanvas";
 import Shape from "@shapes/Shape";
 import { isSameReference } from "@utils/index";
 import { Maybe } from "monet";

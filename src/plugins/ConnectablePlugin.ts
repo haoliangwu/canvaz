@@ -1,5 +1,5 @@
 import BasePlugin, { BasePluginOptions } from "./BasePlugin";
-import BaseCanvas from "@panels/BaseCanvas";
+import BaseCanvas from "@panels/internal/BaseCanvas";
 import { tap, filter, switchMap, takeUntil } from "rxjs/operators";
 import Line from "@lines/Line";
 import Shape from "@shapes/Shape";

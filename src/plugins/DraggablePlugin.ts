@@ -2,7 +2,7 @@ import Shape from "@shapes/Shape";
 import { filter, tap, switchMap, takeUntil } from "rxjs/operators";
 import { safeProp } from "@utils/index";
 import BasePlugin, { BasePluginOptions } from "@plugins/BasePlugin";
-import BaseCanvas from "@panels/BaseCanvas";
+import BaseCanvas from "@panels/internal/BaseCanvas";
 import { DraggableConvasMode } from "@panels/DraggableCanvas";
 import { Subscription, combineLatest } from "rxjs";
 

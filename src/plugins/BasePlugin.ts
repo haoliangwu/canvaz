@@ -1,4 +1,4 @@
-import BaseCanvas from "@panels/BaseCanvas";
+import BaseCanvas from "@panels/internal/BaseCanvas";
 
 export interface BasePluginOptions {}
 

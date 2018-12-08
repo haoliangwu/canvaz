@@ -1,8 +1,8 @@
-import BaseCanvas from "@panels/BaseCanvas";
+import BaseCanvas, { BaseCanvasOptions } from "@panels/internal/BaseCanvas";
 import { ShapePickerCanvasOptions } from "@panels/ShapePickerCanvas";
 
 export default class ShapeMirrorCanvas extends BaseCanvas {
-  constructor(canvas: HTMLCanvasElement, options: ShapePickerCanvasOptions) {
+  constructor(canvas: HTMLCanvasElement, options: BaseCanvasOptions) {
     super(canvas, options)
 
     this.canvas.style.position = 'fixed'

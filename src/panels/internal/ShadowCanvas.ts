@@ -1,5 +1,5 @@
 import { ShapePickerCanvasOptions } from "@panels/ShapePickerCanvas";
-import BaseCanvas from "@panels/BaseCanvas";
+import BaseCanvas from "@panels/internal/BaseCanvas";
 
 export default class ShadowCanvas {
   parent: BaseCanvas

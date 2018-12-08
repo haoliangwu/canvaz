@@ -1,4 +1,4 @@
-import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/BaseCanvas";
+import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/internal/BaseCanvas";
 import { BehaviorSubject } from "rxjs";
 import DraggablePlugin from "@plugins/DraggablePlugin";
 

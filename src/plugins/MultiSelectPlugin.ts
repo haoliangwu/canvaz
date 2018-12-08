@@ -1,5 +1,5 @@
 import BasePlugin, { BasePluginOptions } from "@plugins/BasePlugin";
-import BaseCanvas from "@panels/BaseCanvas";
+import BaseCanvas from "@panels/internal/BaseCanvas";
 import { Subscription } from "rxjs";
 import { delay, filter, tap, switchMap, takeUntil } from "rxjs/operators";
 import RectShape from "@shapes/Rect";
