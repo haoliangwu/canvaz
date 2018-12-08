@@ -7,6 +7,8 @@ import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, 
 import { Some, Maybe, None } from 'monet';
 import BasePlugin from "plugins/BasePlugin";
 
+export type ShapeTuple = [Maybe<Shape>, MouseEvent]
+
 export interface BaseCanvasOptions {
   width?: number,
   height?: number,
@@ -41,6 +43,7 @@ export default abstract class BaseCanvas {
   mousedown$: Observable<MouseEvent>
   mousemove$: Observable<MouseEvent>
   mouseup$: Observable<MouseEvent>
+  selectShape$: Observable<ShapeTuple>
 
   tasks: Map<string | symbol, Observable<any>> = new Map()
   tasks$$?: Subscription
@@ -99,6 +102,8 @@ export default abstract class BaseCanvas {
 
     this.mousedown$ = fromEvent<MouseEvent>(this.canvas, 'mousedown')
       .pipe(setRelativeMousePoint(), multicastMouseEvent())
+    this.selectShape$ = this.mousedown$
+      .pipe(map<MouseEvent, ShapeTuple>(event => [this.selectShape(this.relativeMousePoint), event]))
 
     this.mousemove$ = fromEvent<MouseEvent>(document, 'mousemove')
       .pipe(setRelativeMousePoint(), multicastMouseEvent())

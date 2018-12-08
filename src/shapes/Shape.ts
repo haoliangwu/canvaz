@@ -6,6 +6,7 @@ export interface ShapeBaseOptions {
   fillStyle?: string;
   strokeStyle?: string;
   lineWidth?: number;
+  dashSegments?: number[];
   highlight?: {
     fillStyle?: string
     strokeStyle?: string
@@ -41,6 +42,7 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
   protected offsetY: number = 0
   protected fillStyle: string
   protected strokeStyle: string
+  protected dashSegments: number[] = []
   protected lineWidth: number
   protected halfLineWidth: number
 
@@ -83,6 +85,7 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
 
     this.fillStyle = options.fillStyle || ''
     this.strokeStyle = options.strokeStyle || ''
+    this.dashSegments = options.dashSegments || []
     this.lineWidth = options.lineWidth || 2
     this.halfLineWidth = this.lineWidth / 2
   }

@@ -109,6 +109,19 @@ export default class RectShape extends Shape {
     }
   }
 
+  resize(mousePoint: Point) {
+    const width = mousePoint.x - this.originPoint.x
+    const height = mousePoint.y - this.originPoint.y
+
+    this.width = width > 0 ? width: 0
+    this.offsetWidth = this.width + this.lineWidth
+    this.contentWidth = this.width - this.lineWidth
+
+    this.height = height > 0 ? height : 0
+    this.offsetHeight = this.height + this.lineWidth
+    this.contentHeight = this.height - this.lineWidth
+  }
+
   setOffset(mousePoint: Point): void {
     this.offsetX = mousePoint.x - this.originPoint.x
     this.offsetY = mousePoint.y - this.originPoint.y
@@ -279,6 +292,7 @@ export default class RectShape extends Shape {
 
   private drawRectPath(ctx: CanvasRenderingContext2D) {
     ctx.beginPath()
+    ctx.setLineDash(this.dashSegments)
     ctx.rect(this.originPoint.x, this.originPoint.y, this.width, this.height)
   }
 
