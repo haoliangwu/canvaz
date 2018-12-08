@@ -15,7 +15,7 @@ export default class DraggableCanvas extends BaseCanvas {
   }
 
   constructor(canvas: HTMLCanvasElement, options?: DraggableCanvasOptions) {
-    super(canvas, options)
+    super(canvas, Object.assign({ shadow: true }, options))
 
     const draggablePlugin = new DraggablePlugin()
     this.registerPlugin(draggablePlugin.id, draggablePlugin)

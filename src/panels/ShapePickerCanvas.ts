@@ -3,6 +3,7 @@ import BaseCanvas, { BaseCanvasOptions, BaseConvasMode } from "@panels/BaseCanva
 import { filter, tap, switchMap, takeUntil, throttleTime } from "rxjs/operators";
 import { isSameReference } from "@utils/index";
 import { Subscription, Subject, BehaviorSubject } from "rxjs";
+import ShapeMirrorCanvas from "@panels/internal/ShapeMirrorCanvas";
 
 export interface ShapePickerCanvasOptions extends BaseCanvasOptions {
   target?: BaseCanvas
@@ -10,34 +11,6 @@ export interface ShapePickerCanvasOptions extends BaseCanvasOptions {
 
 export interface ShapePickerConvasMode extends BaseConvasMode {
   picking: boolean;
-}
-
-class ShapeMirrorCanvas extends BaseCanvas {
-  constructor(canvas: HTMLCanvasElement, options: ShapePickerCanvasOptions) {
-    super(canvas, options)
-
-    this.canvas.style.position = 'fixed'
-    this.canvas.style.background = 'transparent'
-
-    this.hide()
-  }
-
-  show(relativePoint: Point) {
-    this.canvas.style.left = `${relativePoint.x}px`
-    this.canvas.style.top = `${relativePoint.y}px`
-    this.canvas.style.opacity = '0.6'
-    this.canvas.style.display = 'initial'
-    this.draw()
-  }
-
-  hide() {
-    this.canvas.style.display = 'none'
-    this.canvas.style.transform = `translate(0, 0)`
-  }
-
-  move(relativePoint: Point) {
-    this.canvas.style.transform = `translate(${relativePoint.x}px, ${relativePoint.y}px)`
-  }
 }
 
 export default class ShapePickerCanvas extends BaseCanvas {

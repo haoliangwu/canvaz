@@ -47,21 +47,24 @@ export default class MultiSelectPlugin extends BasePlugin {
   protected startMultiSelect(event: MouseEvent) {
     if (!this.panel) return false
 
+    this.panel.shadow.toggle(true)
     this.multiSelectMask.move(this.panel.relativeMousePoint)
   }
 
   protected multiSelect(event: MouseEvent) {
     if (!this.panel) return false
 
-    // TODO 这里应该使用独立的 canvas 来绘制 multiselect-mask
-    this.panel.draw()
-    this.multiSelectMask.resize(this.panel.relativeMousePoint)
-    this.multiSelectMask.draw(this.panel.ctx)
+    const { relativeMousePoint, shadow } = this.panel
+
+    shadow.clear()
+    this.multiSelectMask.resize(relativeMousePoint)
+    this.multiSelectMask.draw(shadow.ctx)
   }
 
   protected endMultiSelect(event: MouseEvent) {
     if (!this.panel) return false
 
-    this.panel.draw()
+    this.panel.shadow.toggle(false)
+    this.panel.shadow.clear()
   }
 }

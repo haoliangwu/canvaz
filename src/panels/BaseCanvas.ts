@@ -6,12 +6,14 @@ import { Observable, fromEvent, Subscription, of, Subject, EMPTY, merge, pipe, B
 import { switchMap, takeUntil, tap, publish, refCount, map, filter, bufferTime, partition, catchError } from 'rxjs/operators';
 import { Some, Maybe, None } from 'monet';
 import BasePlugin from "plugins/BasePlugin";
+import ShadowCanvas from "@panels/internal/ShadowCanvas";
 
 export type ShapeTuple = [Maybe<Shape>, MouseEvent]
 
 export interface BaseCanvasOptions {
   width?: number,
   height?: number,
+  shadow?: boolean,
   plugins?: BasePlugin[]
 }
 
@@ -24,6 +26,7 @@ export default abstract class BaseCanvas {
 
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
+  shadow!: ShadowCanvas
   originPoint: Point = { x: 0, y: 0 }
 
   width = 0
@@ -80,6 +83,7 @@ export default abstract class BaseCanvas {
     if (!this.canvas) throw new Error('请传入正确的 canvas 元素或者选择器')
 
     this.ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D
+
     this.width = this.canvas.width
     this.height = this.canvas.height
 
@@ -121,8 +125,17 @@ export default abstract class BaseCanvas {
     this.canvas.width = this.width
     this.canvas.height = this.height
 
-    const plugins = options.plugins || []
+    if (options.shadow) this.initShadowCanvas()
 
+    const plugins = options.plugins || []
+    this.initPlugins(plugins)
+  }
+
+  private initShadowCanvas() {
+    this.shadow = new ShadowCanvas(this)
+  }
+
+  private initPlugins(plugins: BasePlugin[]) {
     plugins.forEach(plugin => this.registerPlugin(plugin.id, plugin))
   }
 
