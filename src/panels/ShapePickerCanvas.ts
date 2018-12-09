@@ -93,7 +93,7 @@ export default class ShapePickerCanvas extends BaseCanvas {
     if (shape.isSelectedContent(this.relativeMousePoint)) {
       this.mirrorShape = shape.clone()
 
-      this.mirrorShape.setOffset(this.relativeMousePoint)
+      this.mirrorShape.setOffsetByMousePoint(this.relativeMousePoint)
       this.mirror.registerElement(this.mirrorShape)
 
       this.offsetPoint = mousePoint

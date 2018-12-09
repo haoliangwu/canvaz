@@ -1,5 +1,5 @@
 import Shape, { ShapeBaseOptions } from "./Shape";
-import { isInRectRange, isInTriRange } from "@utils/index";
+import { isInRectRange, isInTriRange, clonePoint } from "@utils/index";
 import Line from "@lines/Line";
 import { LineOptions } from "@lines/StraightLine";
 import { Maybe, None } from "monet";
@@ -26,7 +26,7 @@ export default class RectShape extends Shape {
   protected offsetHeight: number;
   protected contentHeight: number;
 
-  protected originPoint: Point;
+  originPoint: Point;
 
   protected get centerPoint(): Point {
     return {
@@ -95,6 +95,10 @@ export default class RectShape extends Shape {
     this.originPoint.x = mousePoint.x - this.offsetX
     this.originPoint.y = mousePoint.y - this.offsetY
 
+    this.syncConnections()
+  }
+
+  private syncConnections() {
     if (this.connections.size > 0) {
       this.connections.forEach((cp: ConnectionPoint, l: Line) => {
         const options: Partial<LineOptions> = {}
@@ -113,7 +117,7 @@ export default class RectShape extends Shape {
     const width = mousePoint.x - this.originPoint.x
     const height = mousePoint.y - this.originPoint.y
 
-    this.width = width > 0 ? width: 0
+    this.width = width > 0 ? width : 0
     this.offsetWidth = this.width + this.lineWidth
     this.contentWidth = this.width - this.lineWidth
 
@@ -122,9 +126,14 @@ export default class RectShape extends Shape {
     this.contentHeight = this.height - this.lineWidth
   }
 
-  setOffset(mousePoint: Point): void {
+  setOffsetByMousePoint(mousePoint: Point): void {
     this.offsetX = mousePoint.x - this.originPoint.x
     this.offsetY = mousePoint.y - this.originPoint.y
+  }
+
+  setOffsetByRelativePoint(relativePoint: Point): void {
+    this.offsetX = relativePoint.x - this.originPoint.x
+    this.offsetY = relativePoint.y - this.originPoint.y
   }
 
   isSelected(mousePoint: Point): boolean {
@@ -137,6 +146,19 @@ export default class RectShape extends Shape {
 
   isSelectedBorder(mousePoint: Point): boolean {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
+  }
+
+  isInMultiSelectRange(sp: Point, ep: Point) {
+    const width = Math.abs(sp.x - ep.x)
+    const height = Math.abs(sp.y - ep.y)
+
+    const rsp = clonePoint(this.originPoint)
+    const rep = {
+      x: this.originPoint.x + this.width,
+      y: this.originPoint.y + this.height
+    }
+
+    return isInRectRange(rsp, sp, width, height) && isInRectRange(rep, sp, width, height)
   }
 
   calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint> {

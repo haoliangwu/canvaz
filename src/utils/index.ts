@@ -56,3 +56,7 @@ export function isSamePoint(p1: Point, p2: Point) {
 export function safeProp<T = any>(obj: any, prop: string): T {
   return obj && obj[prop]
 }
+
+export function clonePoint(p: Point): Point {
+  return { x: p.x, y: p.y }
+}

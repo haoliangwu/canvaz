@@ -92,10 +92,12 @@ export default abstract class Shape implements Selectable, Connectable<Line, Sha
 
   abstract draw(ctx: CanvasRenderingContext2D, options?: ShapeBaseOptions): void
   abstract move(mousePoint: Point): void
-  abstract setOffset(mousePoint: Point): void
+  abstract setOffsetByMousePoint(mousePoint: Point): void
+  abstract setOffsetByRelativePoint(relativePoint: Point): void
   abstract isSelected(mousePoint: Point): boolean
   abstract isSelectedContent(mousePoint: Point): boolean
   abstract isSelectedBorder(mousePoint: Point): boolean
+  abstract isInMultiSelectRange(startPoint: Point, endPoint: Point): boolean
   abstract calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint>
   abstract calcHoverSlot(mousePoint: Point): Maybe<Shape>
   abstract getSelectedBorder(mousePoint: Point): Maybe<string>

@@ -196,23 +196,23 @@ export default abstract class BaseCanvas {
     this._mount()
   }
 
-  registerElement(shape: Shape | Line) {
-    if (shape instanceof Shape) {
-      this.shapes.push(shape)
+  registerElement(element: Shape | Line) {
+    if (element instanceof Shape) {
+      this.shapes.push(element)
     }
 
-    if (shape instanceof Line) {
-      this.lines.push(shape)
+    if (element instanceof Line) {
+      this.lines.push(element)
     }
   }
 
-  unregisterElement(shape: Shape | Line) {
-    if (shape instanceof Shape) {
-      arrayRemove(this.shapes, shape)
+  unregisterElement(element: Shape | Line) {
+    if (element instanceof Shape) {
+      arrayRemove(this.shapes, element)
     }
 
-    if (shape instanceof Line) {
-      arrayRemove(this.lines, shape)
+    if (element instanceof Line) {
+      arrayRemove(this.lines, element)
     }
   }
 

@@ -48,7 +48,7 @@ export default class CircleShape extends Shape {
     }
   }
 
-  setOffset(mousePoint: Point): void {
+  setOffsetByMousePoint(mousePoint: Point): void {
     this.offsetX = mousePoint.x - this.centerPoint.x
     this.offsetY = mousePoint.y - this.centerPoint.y
   }
@@ -63,6 +63,10 @@ export default class CircleShape extends Shape {
 
   isSelectedBorder(mousePoint: Point): boolean {
     return !this.isSelectedContent(mousePoint) && this.isSelected(mousePoint)
+  }
+
+  isInMultiSelectRange(sp: Point, ep: Point) {
+    return false
   }
 
   calcConnectionPoint(mousePoint: Point): Maybe<ConnectionPoint> {
